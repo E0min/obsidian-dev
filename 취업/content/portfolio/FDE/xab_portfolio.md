@@ -15,9 +15,11 @@ graph TD
         FE -->|클라이언트 상태| ZD[Zustand]
     end
 
-    subgraph LIVE["실시간"]
-        DB -->|postgres_changes| RT[Supabase Realtime]
-        RT -->|WebSocket| FE
+    subgraph FOLLOW["팔로우 도메인"]
+        FE -->|팔로우 토글| FA["follow/[id] Route Handler"]
+        FA -->|insert / delete follows| SB
+        FE -->|카운트 조회| UP["user-profile Route Handler"]
+        UP -->|count follows / posts| SB
     end
 
     subgraph AUTH_FLOW["인증"]
@@ -29,35 +31,33 @@ graph TD
 - 조회성 요청은 클라이언트 컴포넌트가 Route Handler를 호출해 Supabase에 접근하는 경로로 처리하고, 게시글 작성·수정·삭제 같은 변형 작업은 Server Actions가 Supabase를 직접 호출하도록 두 경로를 명확히 분리했습니다.
 - 서버 상태는 TanStack Query, 클라이언트 전역 상태는 Zustand로 책임을 분리해 실시간성이 중요한 SNS 환경에서도 캐시 일관성과 사용자 인터랙션 상태를 한 곳에서 추적했습니다.
 
-### Case 1. Supabase Realtime을 활용한 라이브 피드 환경 구축
+### Case 1. 팔로우 토글과 프로필 카운트의 데이터 정합 설계
 #### 1. 문제 원인
-- SNS 특성상 댓글과 투표가 빈번하게 발생하지만, 사용자가 직접 새로고침을 누르기 전까지는 최신 데이터를 확인할 수 없는 정적인 환경이 소통을 저해했습니다.
-- 주기적인 폴링 방식은 변화가 없을 때도 호출이 반복되어 서버 부하와 네트워크 비용을 누적시키는 구조적 비효율이 있었습니다.
+- 팔로우 버튼은 프로필 헤더, 팔로워 모달, 팔로잉 모달 세 위치에 나타나는데, 같은 사용자에 대한 팔로우 상태와 헤더의 Followers·Following 카운트가 한 화면 안에서 어긋날 수 있었습니다.
+- 자기 자신 팔로우를 클라이언트에서만 막으면 API를 직접 호출했을 때 `follows` 테이블에 자기 참조 행이 쌓일 수 있었고, 같은 팔로우 관계를 두 번 누르면 중복 행이 생길 위험도 있었습니다.
 
 #### 2. 해결 과정
 ```mermaid
-sequenceDiagram
-    participant App as Client App
-    participant Store as Zustand Store
-    participant RT as Supabase Realtime
-    participant DB as PostgreSQL
-
-    App->>Store: fetchNotify(userId)
-    Store->>RT: channel.subscribe(postgres_changes)
-    Note over Store,RT: 기존 구독 핸들 정리 후 재구독
-
-    DB->>RT: INSERT / UPDATE 이벤트
-    RT->>Store: payload 전달
-    Store->>App: 상태 머지 후 UI 갱신
+flowchart TD
+    Btn["FollowButton (프로필 헤더)"] -->|"useActionState + 서버 액션"| FollowAPI["POST/DELETE /api/follow/[id]"]
+    FollowAPI -->|getUser 인증| Guard{"follower == target?"}
+    Guard -->|"같음"| Block[400 자기 팔로우 차단]
+    Guard -->|"다름"| Dup{follows 행 존재?}
+    Dup -->|"있음"| Skip[중복 insert 생략]
+    Dup -->|"없음"| Write["insert / delete follows"]
+    Write --> Refresh["router.refresh()"]
+    Refresh --> Header["ProfileHeader 서버 컴포넌트 재실행"]
+    Header -->|"count head:true"| Count["followerCount / followingCount 재집계"]
 ```
-- 데이터베이스 변경 사항을 클라이언트로 즉시 푸시하기 위해 Supabase Realtime의 `postgres_changes` 이벤트 구독을 도입했습니다.
-- 댓글 영역에서는 React Query 캐시 갱신 로직과 연동하여 새 댓글이 도착하면 캐시가 갱신되고 화면이 즉시 반영되도록 구성했습니다.
-- 알림 영역에서는 Zustand 스토어가 구독 해제 핸들을 함께 보관하도록 설계하고, 재진입이나 사용자 전환 시 이전 구독을 정리한 뒤 재구독하도록 하여 중복 구독으로 인한 리소스 누수를 방지했습니다.
+- 팔로우 토글 Route Handler(`app/api/follow/[id]/route.ts`)에서 `supabase.auth.getUser()`로 인증을 확인한 뒤 `followerId === id`이면 400을 반환해 자기 자신 팔로우와 언팔로우를 서버에서 차단했습니다.
+- POST는 `follows`에 이미 같은 `follower_id`·`following_id` 행이 있으면 insert를 건너뛰고, DELETE는 삭제된 행 수가 0이면 관계 없음 메시지를 반환하도록 분기해 중복 행과 빈 삭제를 막았습니다.
+- 헤더 카운트는 `user-profile` Route Handler가 `follows`와 `posts`를 `count: 'exact', head: true`로 집계해 followerCount·followingCount·postCount를 한 응답으로 내려주고, 헤더의 팔로우 버튼은 서버 액션(`useActionState`) 처리 후 `router.refresh()`로 서버 컴포넌트를 재실행해 카운트와 버튼 상태를 같은 응답에서 다시 받도록 묶었습니다.
+- 팔로워·팔로잉 모달은 `app/@modal/(.)followers`·`(.)followings` 인터셉팅 라우트로 띄우고 `@modal/default.tsx`에 빈 폴백을 두었으며, 모달 목록의 팔로우 버튼은 조회 API가 함께 내려준 `isFollowing` 값으로 초기 상태를 맞춰 프로필 헤더와 같은 기준으로 표시했습니다.
 
 #### 3. 결과
-- 새로고침 없이도 새 댓글과 알림이 즉시 반영되는 라이브 환경을 구현하여 상호작용의 즉시성을 확보했습니다.
-- 폴링 방식을 제거하고 변경 이벤트가 발생할 때만 메시지를 받도록 하여 불필요한 요청을 줄였습니다.
-- **배운 점**: Zustand 스토어에 Supabase Realtime 구독 핸들을 묶어 두고 재진입 시 이전 구독을 정리한 뒤 재구독하도록 설계해 중복 구독으로 인한 리소스 누수를 차단했습니다.
+- 자기 자신 팔로우와 중복 팔로우가 서버에서 차단되어 `follows` 테이블에 자기 참조 행이나 중복 관계가 생기지 않게 했습니다.
+- 팔로우 토글 후 `router.refresh()`로 헤더 카운트와 버튼 상태가 같은 서버 응답에서 갱신되어, 프로필 헤더와 팔로워·팔로잉 모달이 같은 팔로우 상태를 보여주게 했습니다.
+- **배운 점**: 팔로우 상태를 클라이언트 표시와 별개로 토글 Route Handler에서 인증·자기 참조·중복을 검증하고, 카운트는 `follows` 테이블을 `count` 집계로 다시 읽어 표시값과 실제 관계 수가 어긋나지 않도록 설계했습니다.
 
 ### Case 2. 피드 맥락을 유지하는 모달 라우팅 패턴 적용
 #### 1. 문제 원인

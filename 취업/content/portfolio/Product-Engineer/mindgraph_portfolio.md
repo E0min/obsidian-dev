@@ -1,6 +1,6 @@
 ## [MindGraph] - AI 지식 캡처 & 그래프 시각화
 
-ChatGPT·Gemini·Claude·Grok 4개 LLM 서비스의 답변을 캡처해 의미 단위로 묶고 D3.js로 시각화하는 Chrome Extension·Next.js 웹앱입니다. "여러 LLM 서비스에 흩어진 답변을 한 곳에 모으면 사용자의 사고 흐름이 보존된다"는 가설을 코드보다 문제 정의에서 먼저 잡고, 1인 PO가 Chrome Extension·Next.js 웹앱·Supabase 백엔드를 풀스택으로 책임지며 도메인 getmindgraph.com 출시 대비 1인 프로토타입 빌드를 주도적 오너십으로 진행하고 있습니다. 가설을 빠르게 검증하기 위해 Claude Code 위에 9개 훅·plan·qa·ship 3 phase /sprint 워크플로우·4중 SSOT 자동 동기를 직접 설계했습니다 (Case 1에서 상세히 설명합니다).
+ChatGPT·Gemini·Claude·Grok 4개 LLM 서비스의 답변을 캡처해 의미 단위로 묶고 D3.js로 시각화하는 Chrome Extension·Next.js 웹앱입니다. "여러 LLM 서비스에 흩어진 답변을 한 곳에 모으면 사용자의 사고 흐름이 보존된다"는 가설을 코드보다 문제 정의에서 먼저 잡았습니다. 1인 PO로 Chrome Extension·Next.js 웹앱·Supabase 백엔드를 풀스택으로 책임지며 도메인 getmindgraph.com 출시를 목표로 프로토타입을 빌드하고 있습니다. 가설을 빠르게 검증하려고 Claude Code 위에 9개 훅·plan·build·qa·ship 4 phase /sprint 워크플로우·4중 SSOT 자동 동기를 직접 설계했습니다 (Case 1에서 상세히 설명합니다).
 
 ### 전체적인 아키텍처
 
@@ -41,7 +41,7 @@ graph TD
 
 #### 1. 문제 원인
 
-- 1인 PO가 기획·구현·QA·배포를 혼자 담당하면서 AI와의 대화가 세션 간 초기화되어 같은 규칙·교정을 반복 설명하는 비용이 다음 가설 검증 시간을 갉아먹었습니다.
+- 1인 PO가 기획·구현·QA·배포를 혼자 담당하면서 AI와의 대화가 세션 간 초기화되어 같은 규칙·교정을 반복 설명하느라 다음 가설 검증에 쓸 시간이 줄었습니다.
 - AI가 사용자 확인 없이 commit 생성·이슈 완료 처리 같은 자율 행동을 해서 검증 안 된 변경이 그대로 main 브랜치에 머지되는 사고 위험이 있었습니다.
 - 코드·이슈·문서·배포 기록 네 시스템이 같은 정보를 중복 관리해 현재 상태 파악을 위해 네 곳을 수동 대조해야 했습니다.
 
@@ -52,14 +52,14 @@ graph TD
     USER(["사용자"])
     USER -->|"/sprint 명령"| W1
 
-    subgraph STAGES["3 phase 워크플로우"]
+    subgraph STAGES["4 phase 워크플로우"]
         direction LR
-        W1["plan (D-0)\nLinear Cycle 생성\nSPRINT.md\nRESEARCH.md 자동 기록"] --> W2["일상 작업\nD+1~10"] --> W3["qa (D+13)\n미완료 이슈\n완료 or archive\n(이월 차단)"] --> W4["ship (D+14)\ngit tag\nCHANGELOG\nRETRO.md"]
+        W1["plan (D-0)\nLinear Cycle 생성\nSPRINT.md\nRESEARCH.md 자동 기록"] --> W2["build\n실제 구현\nD+1~10"] --> W3["qa (D+13)\n미완료 이슈\n완료 or archive\n(이월 차단)"] --> W4["ship (D+14)\ngit tag\nCHANGELOG\nRETRO.md"]
     end
 
     W2 -->|"PreToolUse · Write/Edit"| SG["spec-gate.sh\n스펙 미승인 차단"]
-    W3 -->|"PreToolUse · Linear Done"| LG["linear-done-gate.sh\n사용자 승인 전 차단"]
-    W2 -->|"PreToolUse · cycle 이동"| IG["inp-cycle-guard.sh\nactive cycle 외 차단"]
+    W3 -->|"PreToolUse · Linear Done"| LG["linear-done-gate.sh\n비활성 스텁(재무장 seam)"]
+    W2 -->|"PreToolUse · cycle 이동"| IG["cycle-guard\nactive cycle 외 차단"]
     W2 -->|"PreToolUse · PR"| BP["build-pr-block.sh\n워커 브랜치 PR 차단"]
 
     SG & LG & IG & BP -->|"게이트 통과"| SSOT
@@ -71,23 +71,23 @@ graph TD
     end
 ```
 
-- **9개 훅 자동 개입**: 도구 호출 시점에 자동 실행되는 9개 훅을 두어 차단 게이트 4개(`spec-gate.sh`, `linear-done-gate.sh`, `build-pr-block.sh`, `inp-cycle-guard.sh`)와 보조 알림 5개(`stale-warn.sh`, `inp-reuse-suggest.sh`, `integrity-sync.sh`, `context-pack-stale.sh`, `worktree-env-symlink.sh`)로 분류했습니다.
-- **/sprint 메타 스킬 3 phase**: plan(Linear Cycle 생성·SPRINT.md 작성·직전 cycle RESEARCH.md 자동 기록)·qa(미완료 이슈를 완료 또는 archive로 강제 결정, 이월 옵션 mechanism 차단)·ship(git tag·CHANGELOG·RETRO.md 자동 기록)을 하나의 명령으로 연결하고, 각 phase 진입 전 이전 phase 산출물 존재 여부를 자동 검증했습니다. 옛 6단계(research/build/retro)는 plan의 RESEARCH.md 자동 기록과 ship의 RETRO.md 자동 기록으로 흡수했습니다.
+- **9개 훅 자동 개입**: 도구 호출 시점에 자동 실행되는 9개 훅을 두어 차단 게이트 3개(`spec-gate.sh`, `build-pr-block.sh`, `cycle-guard`)와 보조 6개(`linear-done-gate.sh`[현재 비활성 스텁], `stale-warn.sh`, `reuse-suggest`, `integrity-sync.sh`, `context-pack-stale.sh`, `worktree-env-symlink.sh`)로 분류했습니다.
+- **/sprint 메타 스킬 4 phase**: plan(Linear Cycle 생성·SPRINT.md 작성·직전 cycle RESEARCH.md 자동 기록)·build(실제 구현)·qa(미완료 이슈를 완료 또는 archive로 강제 결정, 이월 옵션 mechanism 차단)·ship(git tag·CHANGELOG·RETRO.md 자동 기록)을 하나의 명령으로 연결하고, 각 phase 진입 전 이전 phase 산출물 존재 여부를 자동 검증했습니다. 옛 6단계 중 research·retro만 plan의 RESEARCH.md 기록과 ship의 RETRO.md 기록으로 흡수하고 build는 별도 phase로 유지했습니다.
 - **4중 SSOT**: SPRINT.md(문서)·Linear Cycle(이슈)·Git(코드)·CHANGELOG(배포 기록)에 역할을 하나씩만 부여하고 `/sprint`가 단계마다 자동 동기화했습니다.
 - **5층 컨텍스트 영속화**: Conversation·Memory·CLAUDE.md·Hook·Skill 5층에 규칙을 분산해 교정이 바로 반영되고 다음 세션에 자동 로드되며 매 세션 system prompt에 강제되고 도구 호출 시 차단됩니다.
 - **부서·에이전트 분리 + context-map 자동 라우팅**: 7개 부서(design·dev·docs·marketing·ops·product·qa)와 9개 에이전트(ceo·frontend/backend/qa-engineer·product-manager·ui-ux-designer·marketing-strategist·ops-engineer·knowledge-logger)별로 `department/{팀}/CLAUDE.md`와 `docs/` lifecycle 폴더를 분리하고, `RULES/context-map.md` + `SYSTEM/schemas/code-doc-mapping.yaml`로 task_type별 분류(new_feature·ui_change·api_change·bug_fix·refactor 등)과 코드 path glob을 must-read doc에 매핑했습니다. CEO 에이전트가 워커에 위임할 때 합집합 5개 내외 doc만 prompt에 첨부되어 매 세션 LLM이 받는 컨텍스트 표면이 좁혀졌고, PO가 가설을 코드로 옮길 때 LLM 응답 정확도와 토큰 비용을 동시에 잡았습니다.
 
 #### 3. 결과
 
-- **성과**: 이슈 등록·SPRINT.md 작성·CHANGELOG 갱신·Git 태그·Linear Done 전환 같은 sprint 라이프사이클 반복 작업을 9개 훅·`/sprint` 3 phase로 자동화해 PO가 가설 검증에 시간을 다시 쓸 수 있게 했습니다.
-- **배운 점**: 9개 훅과 3 phase /sprint, 4중 SSOT 자동 동기를 코드화한 결과 가설 검증에 쓰는 시간 비중이 다시 늘었습니다.
+- **성과**: 이슈 등록·SPRINT.md 작성·CHANGELOG 갱신·Git 태그·Linear Done 전환 같은 sprint 라이프사이클 반복 작업을 9개 훅·`/sprint` 4 phase로 자동화해 PO가 가설 검증에 시간을 다시 쓸 수 있게 했습니다.
+- **배운 점**: 9개 훅과 4 phase /sprint, 4중 SSOT 자동 동기를 코드화한 결과 가설 검증에 쓰는 시간 비중이 다시 늘었습니다.
 
 ### Case 2. 끊김 없는 캡처 UX를 위한 Write-Behind 캐시 설계
 
 #### 1. 문제 원인
 
-- 캡처는 카페·지하철 같은 이동 중에 가장 자주 일어나리라 가정했는데 초기 구조가 Supabase 직접 쓰기여서 네트워크 단절 시 사용자 입력이 사라질 수 있는 구조였고, PO 입장에서 가장 큰 사용자 이탈 요인이 될 것이라 판단했습니다.
-- 온라인 복귀 후 누락 노드를 수동 재입력해야 하면 새 캡처 흐름의 신뢰도가 떨어져 출시 후 다음 가설 검증을 시작하지 못한다는 리스크가 있다고 봤습니다.
+- 캡처는 카페·지하철 같은 이동 중에 가장 자주 일어나리라 가정했는데 초기 구조가 Supabase 직접 쓰기여서 네트워크 단절 시 사용자 입력이 사라질 수 있는 구조였고, PO 입장에서 가장 큰 사용자 이탈 요인이었습니다.
+- 온라인 복귀 후 누락 노드를 수동 재입력해야 하면 새 캡처 흐름의 신뢰도가 떨어지고, 출시 후 다음 가설 검증도 시작하기 어려웠습니다.
 
 #### 2. 해결 과정
 
@@ -129,9 +129,9 @@ sequenceDiagram
 
 #### 1. 문제 원인
 
-- 1인 PO 환경에서 출시 후 사용자가 어디서 막힐지 받을 데이터 채널이 없으면 다음 가설 결정 근거가 부재할 것이라 판단했습니다.
-- 사용자 에러·요청을 받을 통로를 출시 전에 만들어두지 않으면 출시 후 발생할 사용자 사고가 다음 sprint plan에 반영될 통로 없이 누락된다고 판단했습니다.
-- 클라이언트 에러와 서버 에러, 사용자 행동 이벤트가 분리된 시스템에 흩어져 있으면 출시 후 동일 사용자의 흐름을 한 줄로 추적하기 어려운 구조가 되리라 봤습니다.
+- 1인 PO 환경에서 출시 후 사용자가 어디서 막힐지 받을 데이터 채널이 없으면 다음 가설을 결정할 근거가 없었습니다.
+- 사용자 에러·요청을 받을 통로를 출시 전에 만들어두지 않으면 출시 후 발생할 사용자 사고가 다음 sprint plan에 반영될 통로 없이 누락됩니다.
+- 클라이언트 에러와 서버 에러, 사용자 행동 이벤트가 분리된 시스템에 흩어져 있으면 출시 후 동일 사용자의 흐름을 한 줄로 추적하기 어렵습니다.
 
 #### 2. 해결 과정
 
@@ -184,7 +184,7 @@ graph LR
 
 - 초기 v1 구조에서 루트 토픽 `TopicNode`와 질문·답변 `QANode`를 별도 컬렉션으로 나눈 결정이, 코드 베이스에 신규 기능을 추가할 때마다 두 컬렉션 동기 비용을 다시 치르게 했습니다.
 - 노드 조상 경로(breadcrumb) 조회에 두 컬렉션 재귀 조인이 필요해, PO가 새 가설(공유·검색·요약)을 코드로 옮길 때마다 같은 조인 로직을 재작성하는 비용이 누적되었습니다.
-- 분리 컬렉션에서 단일 컬렉션으로 전환 시 무손실 마이그레이션 전략이 없으면 출시 후 사용자 데이터 손실로 직결될 위험이 있다고 판단했습니다.
+- 분리 컬렉션에서 단일 컬렉션으로 전환 시 무손실 마이그레이션 전략이 없으면 출시 후 사용자 데이터 손실로 직결될 위험이 컸습니다.
 
 #### 2. 해결 과정
 

@@ -83,7 +83,7 @@ sequenceDiagram
 #### 1. 문제 원인
 - 시그널링 초기 구현에서는 SDP 응답을 받기 전에 ICE 후보가 먼저 도착하면 `setRemoteDescription`이 호출되지 않은 PeerConnection에 `addIceCandidate`를 시도하면서 예외가 발생했습니다.
 - 후보가 한 번이라도 유실되면 NAT 트래버설이 실패하여 미디어 트랙이 붙지 않는 무음 상태가 재현되었고, 실패 시 별다른 복구 경로가 없어 사용자가 페이지를 새로고침해야 했습니다.
-- 원인은 STOMP `presenterAnswer`/`audience/answer` 메시지와 `presenterIceCandidate`/`audience/iceCandidate` 메시지의 도착 순서가 정렬되지 않는다는 점에 있었습니다.
+- 원인은 STOMP `presenterAnswer`/`audience/answer` 메시지와 `presenterIceCandidate`/`audience/iceCandidate` 메시지의 도착 순서가 어긋나는 데 있었습니다.
 
 #### 2. 해결 과정
 - 발표자와 청중 컴포넌트 양쪽에 `pendingCandidates`라는 `useRef` 큐를 두고, ICE 메시지를 수신했을 때 `pcRef.current.remoteDescription`이 아직 비어 있으면 곧장 추가하지 않고 큐에 적재하도록 했습니다.

@@ -8,7 +8,7 @@
 
 - LLM 응답 지연으로 입력 직후 화면이 멈추는 문제를 해결하고자 sessionStorage에 프롬프트를 저장하고 temp ID로 즉시 라우팅한 뒤 mutation 성공 시 실제 ID로 교체하는 Optimistic 라우팅을 구현했습니다.
 
-- 4인 협업에서 토픽 전환·노드 경로 탐색이 회귀로 무너지는 문제를 막고자 findPathToNode와 Zustand 토픽 토글에 Vitest 회귀 테스트를 작성해 LLM 통신 경로 정합을 자동 검증했습니다.
+- 4인 협업에서 토픽 전환·노드 경로 탐색이 회귀로 무너지는 문제를 막고자 findPathToNode와 Zustand 토픽 토글에 Vitest 회귀 테스트를 작성해 트리 경로 탐색과 토픽 스토어 상태 회귀를 자동 검증했습니다.
 
 - 843줄로 비대해진 단일 훅을 책임 단위로 쪼개 355줄로 축소하고, Feature-First 구조로 features·views·shared를 분리해 LLM 보조 리팩토링이 진입할 모듈 경계를 마련했습니다.
 

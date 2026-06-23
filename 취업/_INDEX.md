@@ -4,7 +4,13 @@ status: active
 created: 2026-05-23
 last-touched: 2026-06-06
 repo: ~/깃허브/취업/이력서_포폴/이력서_포폴_v2/pdf-generator
-tags: [project/취업, status/active, career/fe, career/product-engineer, career/fdd, career/ai-native]
+tags:
+  - project/취업
+  - status/active
+  - career/fe
+  - career/product-engineer
+  - career/fdd
+  - career/ai-native
 ---
 
 # 취업 — 직무 준비 메타 프로젝트
@@ -18,6 +24,7 @@ tags: [project/취업, status/active, career/fe, career/product-engineer, career
 
 ## Map
 - [[취업/guides/_MOC]] — 이력서·포폴·프롬프트 가이드 (3종)
+- [[취업/자소서/_MOC]] — 자기소개서 작업 공간 (회사별 작성·지원동기 가이드)
 - [[취업/interviews/_MOC]] — 면접 준비 자료
   - [[fit]] — WebRTC 컨퍼런스 (Fit)
   - [[chatgraph]] — 대화형 데이터 시각화
@@ -25,6 +32,7 @@ tags: [project/취업, status/active, career/fe, career/product-engineer, career
 - [[취업/content/_MOC]] — **이력서·포폴 컨텐츠 SSOT** (옵시디언이 SSOT, pdf-generator/content가 symlink)
 - [[취업/outputs/_MOC]] — **pdf-generator 생성 PDF** (최신: FDE/41·PE/39·AIN/40·FE/43, 파일명 `이력서_{role}.pdf`)
 - [[취업/jd-analysis/_MOC]] — 채용공고 분석 (2026-05-23, 18건 박제 + 4 직무 분석 + matrix)
+- [[취업/오픽/_MOC]] — OPIc IH 목표 준비 자료
 - [[target-companies]] — 타겟 회사
 - [[portfolio-strategy]] — 직무별 어필 자산 매핑
 - [[narrative]] — 내 스토리라인

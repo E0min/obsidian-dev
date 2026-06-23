@@ -18,7 +18,7 @@ graph TD
         CANVAS["canvas/[topicId]"]
         CLI["'use client' 경계"]
         ENG["lib/engine\n그래프 렌더러"]
-        TT["lib/tiptap\n에디터 확장"]
+        TT["editor-extensions.ts\n확장 등록"]
         I18N["i18n + messages\nen.json, ko.json"]
     end
 
@@ -34,7 +34,7 @@ graph TD
     NC -.-> CLI
 ```
 
-- **Architecture**: Server Component 경계와 `'use client'` 레이어를 분리해 D3 같은 명령형 DOM 라이브러리를 한쪽에 격리하고, `[locale]` 라우팅 + en/ko 메시지로 다국어를 코드 베이스 안에서 다루며, Tiptap 에디터를 `lib/tiptap` 모듈에 모아 확장 관리합니다.
+- **Architecture**: Server Component 경계와 `'use client'` 레이어를 분리해 D3 같은 명령형 DOM 라이브러리를 한쪽에 격리하고, `[locale]` 라우팅 + en/ko 메시지로 다국어를 코드 베이스 안에서 다루며, Tiptap 확장을 `editor-extensions.ts`에 한 곳에 등록합니다(`lib/tiptap`에는 drag-handle만 별도).
 
 ### Case 1. D3.js DOM 조작과 Next.js SSR 충돌을 분리한 클라이언트 전용 그래프 엔진 격리
 
@@ -87,7 +87,7 @@ graph TD
 
 ```mermaid
 graph LR
-    subgraph TT["Tiptap 확장 (lib/tiptap)"]
+    subgraph TT["Tiptap 확장 (editor-extensions.ts)"]
         EXT["code-block-lowlight\ntable 4종\nimage / task-list\nhighlight / link\ndrag-handle / typography"]
     end
 
@@ -114,22 +114,22 @@ graph LR
     AUTH["app/auth/callback\n(locale 밖)"] -.-> ROUTE
 ```
 
-- **Tiptap 확장 모듈화**: `lib/tiptap`에 `code-block-lowlight`·`table` 4종·`image`·`task-list`·`highlight`·`link`·`drag-handle`·`typography` 확장을 모아 두고 에디터 컴포넌트에서 import해 사용했습니다.
+- **Tiptap 확장 모듈화**: `editor-extensions.ts`에 `code-block-lowlight`·`table` 4종·`image`·`task-list`·`highlight`·`typography` 확장을 등록하고 `drag-handle`만 `lib/tiptap`에 분리해 에디터 컴포넌트에서 import해 사용했습니다.
 - **단축키 분리**: `lib/keyboard`에 단축키 매핑을 모아 에디터·캔버스·검색이 같은 단축 정책을 공유하도록 했습니다.
 - **next-intl 라우트 그룹**: `app/[locale]` 동적 세그먼트 아래 `landing`·`privacy`·`terms`·`canvas/[topicId]`를 두어 모든 사용자 화면이 locale을 거치고 메시지는 `messages/{en,ko}.json` 두 JSON에서 끝나도록 했습니다.
 - **OAuth 콜백 분리**: 콜백은 `app/auth/callback`을 별도 둬 locale 변경 영향을 받지 않게 해 provider 등록 URL을 ko/en별로 따로 관리하지 않도록 했습니다.
 
 #### 3. 결과
 
-- **성과**: 새 Tiptap 확장 추가가 `lib/tiptap`에 의존성 등록 한 단계로 끝나고, 번역 검수는 두 JSON 파일에서 마무리되며, OAuth 콜백은 다국어 라우트와 독립적으로 동작합니다.
+- **성과**: 새 Tiptap 확장 추가가 `editor-extensions.ts` 등록 한 단계로 끝나고, 번역 검수는 두 JSON 파일에서 마무리되며, OAuth 콜백은 다국어 라우트와 독립적으로 동작합니다.
 - **배운 점**: 확장·단축키·메시지·인증 콜백 네 가지를 각각의 단일 진입점으로 모아 새 기능 추가 시 손대야 할 파일을 한 곳으로 좁혔습니다.
 
 ### Case 3. Manifest V3 Extension과 Web 사이 메시지 통신·origin 검증
 
 #### 1. 문제 원인
 
-- Chrome Extension MV3에서 Web 도메인으로 인증 토큰을 넘기는 표준 경로가 없어, postMessage 기반 자체 브리지를 만들어야 했습니다.
-- postMessage는 origin을 명시 검증하지 않으면 외부 페이지가 임의로 토큰을 가져갈 수 있는 보안 결함이 생깁니다.
+- Chrome Extension MV3에서 Web 도메인으로 Extension 카트 데이터(저장한 LLM 답변 아이템)를 넘기는 표준 경로가 없어, postMessage 기반 자체 브리지를 만들어야 했습니다.
+- postMessage는 origin을 명시 검증하지 않으면 허가되지 않은 origin이 카트 데이터를 가져갈 수 있는 보안 결함이 생깁니다.
 - MV3는 `eval()` 금지·외부 스크립트 동적 주입 금지 같은 CSP 제약이 있어 일반 웹앱 통신 패턴을 그대로 쓸 수 없습니다.
 
 #### 2. 해결 과정
@@ -155,10 +155,10 @@ graph LR
 
 - **bridge.ts 화이트리스트**: 웹앱 쪽 `bridge.ts`가 `ALLOWED_ORIGINS` 상수에 허용 origin 목록을 두고, postMessage 수신 시 `event.origin`이 화이트리스트에 있을 때만 처리합니다(`SECURITY_POLICY.md §8` 강제).
 - **chrome.runtime.sendMessage**: Extension 내부 통신은 `eval` 없이 안전한 `chrome.runtime.sendMessage` 채널만 사용합니다.
-- **3-vite 빌드 분리**: `vite.config.extension.ts`·`vite.config.content.ts`·`vite.config.bridge.ts` 3개 vite 설정으로 Service Worker·Content Script·인증 bridge 번들 요구사항을 분리해 각 환경 보안 제약을 따로 다룹니다.
-- **인증 토큰 한 방향**: Extension에서 Web 방향으로만 토큰이 흐르고 역방향은 없게 해 토큰 노출 표면을 최소화했습니다.
+- **3-vite 빌드 분리**: `vite.config.extension.ts`·`vite.config.content.ts`·`vite.config.bridge.ts` 3개 vite 설정으로 Service Worker·Content Script·카트 데이터 bridge 번들 요구사항을 분리해 각 환경 보안 제약을 따로 다룹니다.
+- **카트 데이터 한 방향**: Extension에서 Web 방향으로만 카트 데이터가 흐르고 역방향은 없게 해 데이터 노출 표면을 최소화했습니다.
 
 #### 3. 결과
 
-- **성과**: 외부 페이지가 임의로 mindgraph 인증 토큰을 가져가는 경로를 origin 화이트리스트로 차단했고, MV3 CSP 제약 안에서 Extension과 Web 사이 메시지 통신을 한 방향 흐름으로 정리했습니다.
-- **배운 점**: ALLOWED_ORIGINS 화이트리스트를 bridge.ts에 두고 Service Worker·Content Script·bridge 번들을 3개 vite 설정으로 분리해, MV3 CSP 위반 없이 인증 토큰이 화이트리스트 origin으로만 전달되도록 했습니다.
+- **성과**: 허가되지 않은 origin이 mindgraph 카트 데이터를 가져가는 경로를 origin 화이트리스트로 차단했고, MV3 CSP 제약 안에서 Extension과 Web 사이 메시지 통신을 한 방향 흐름으로 정리했습니다.
+- **배운 점**: ALLOWED_ORIGINS 화이트리스트를 bridge.ts에 두고 Service Worker·Content Script·bridge 번들을 3개 vite 설정으로 분리해, MV3 CSP 위반 없이 카트 데이터를 화이트리스트 origin으로만 전달되도록 했습니다.

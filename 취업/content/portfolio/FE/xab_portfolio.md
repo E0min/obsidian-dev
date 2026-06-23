@@ -1,6 +1,6 @@
 ## [xAB] - 실시간 투표 및 소통 중심의 A/B 테스트 SNS
 
-두 선택지에 대한 실시간 투표·댓글 토론을 반영하는 SNS로, 본인은 4인 FE 팀에 참여해 Next.js App Router 병렬·인터셉팅 라우트 모달·useInfiniteQuery 무한 스크롤·Supabase Realtime 구독 수명 관리·@supabase/ssr 미들웨어·OAuth 콜백 X-Forwarded-Host 복원을 담당했습니다.
+두 선택지의 실시간 투표·댓글 토론을 반영하는 SNS로, 본인은 4인 FE 팀에 참여해 프로필·팔로우 도메인과 @modal 인터셉팅 라우트 모달·useInfiniteQuery 무한 스크롤 피드를 담당했습니다.
 
 ### 전체적인 아키텍처
 
@@ -11,33 +11,33 @@ graph TD
     subgraph FE_LAYER["Next.js App Router"]
         ROUTE["app/(feed)"]
         SLOT["@modal slot"]
-        INTERCEPT["(.)write 인터셉팅"]
+        INTERCEPT["(.)followers·(.)followings 인터셉팅"]
         DEFAULT["@modal/default.tsx\n빈 슬롯 폴백"]
-        MW["middleware.ts\n@supabase/ssr"]
-        CB["app/auth/callback\nX-Forwarded-Host 복원"]
+        PROFILE["app/profile/[id]\nProfileHeader 합성"]
+        FOLLOW["FollowButton\nuseActionState + router.refresh"]
     end
 
     subgraph STATE["상태 계층"]
-        RQ["TanStack Query\n서버 상태"]
-        ZS["Zustand\n구독 핸들 보관"]
+        RQ["TanStack Query\n무한 스크롤 서버 상태"]
+        ACTION["서버 액션\ntoggleFollowUserAction"]
     end
 
     subgraph BE["Supabase"]
         SB["@supabase/ssr client"]
         DB[("PostgreSQL")]
-        RT["Realtime\npostgres_changes"]
     end
 
     USER --> ROUTE
     ROUTE --> SLOT --> INTERCEPT
     SLOT --> DEFAULT
-    USER --> MW --> SB
-    USER --> CB
+    USER --> PROFILE --> FOLLOW --> ACTION
+    PROFILE --> RQ
     ROUTE --> RQ --> SB --> DB
-    DB --> RT --> ZS --> RQ
+    ACTION --> SB
+    FOLLOW -->|"router.refresh()"| PROFILE
 ```
 
-- **Architecture**: 병렬 라우트(`@modal`) + 인터셉팅 라우트(`(.)write`)로 모달·독립 페이지를 같은 URL로 처리하고, `@supabase/ssr` 미들웨어가 매 요청에서 세션을 검증하며, Realtime 구독 핸들을 Zustand에 보관해 라이프사이클을 통제합니다.
+- **Architecture**: 병렬 라우트(`@modal`) + 인터셉팅 라우트(`(.)followers`·`(.)followings`)로 팔로워·팔로잉 모달과 독립 페이지를 같은 URL로 처리하고, 프로필 화면은 `ProfileHeader` 서버 컴포넌트가 `user-profile` 응답으로 팔로우·게시글 카운트와 `isFollowing`을 받아 렌더하며, 팔로우 토글은 `useActionState` 서버 액션 처리 후 `router.refresh()`로 카운트와 버튼 상태를 다시 페칭합니다.
 
 ### Case 1. useInfiniteQuery + Intersection Observer 무한 스크롤
 
@@ -107,57 +107,78 @@ graph TD
 - **성과**: 게시글 작성·상세 진입 시 피드 위치·스크롤 컨텍스트가 보존되어 탐색이 끊기지 않고, 모달·독립 페이지 진입을 같은 URL로 처리해 공유 링크·새로고침 시에도 일관된 화면을 갖췄습니다.
 - **배운 점**: @modal 슬롯 + (.)write 인터셉팅을 결합해 클라이언트 네비게이션은 모달 오버레이, 새로고침·직접 URL 진입은 독립 페이지로 분기되도록 같은 URL에서 두 진입 방식을 처리했습니다.
 
-### Case 3. Supabase Realtime postgres_changes + Zustand 구독 핸들 수명 관리
+### Case 3. 프로필 도메인 컴포넌트 합성과 서버 액션 기반 팔로우 토글 상태 동기화
 
 #### 1. 문제 원인
 
-- SNS 특성상 댓글·투표가 빈번하게 발생하지만 사용자가 새로고침을 누르기 전까지 최신 데이터를 확인할 수 없는 정적 환경이 소통을 저해했습니다.
-- 주기적 폴링은 변화 없을 때도 호출이 반복되어 서버 부하·네트워크 비용을 누적.
-- 구독 핸들을 관리하지 않으면 컴포넌트 마운트·언마운트·사용자 전환 시 중복 구독으로 인한 리소스 누수가 발생.
+- `app/profile/[id]/page.tsx`와 홈 사이드바가 같은 사용자 정보(팔로워·팔로잉·게시글 카운트, 프로필 이미지, 본인 여부)를 서로 다른 화면에서 반복 표시해, 화면마다 데이터 페칭과 본인/타인 분기를 따로 짜면 중복과 불일치가 생겼습니다.
+- 팔로우 버튼을 클라이언트 상태로만 토글하면 `isFollowing`은 즉시 바뀌지만 같은 화면의 팔로워 카운트와 다른 사용자의 팔로잉 카운트는 그대로 남아, 팔로우 직후 버튼과 숫자가 어긋나는 문제가 있었습니다.
 
 #### 2. 해결 과정
 
 ```mermaid
-graph LR
-    APP["Client App"] -->|"fetchNotify"| STORE["Zustand"]
-    STORE -->|"기존 핸들 unsubscribe"| STORE
-    STORE -->|"channel.subscribe"| RT["Supabase Realtime"]
-    DB[("PostgreSQL")] -->|"INSERT·UPDATE"| RT
-    RT -->|"payload"| STORE
-    STORE -->|"React Query 캐시 갱신"| APP
-    APP -->|"언마운트 시 unsubscribe"| STORE
+graph TD
+    PAGE["app/profile/[id]/page.tsx\nSuspense 합성"]
+    HEADER["ProfileHeader\n서버 컴포넌트"]
+    API["GET /api/profile/[id]/user-profile\nfollowerCount·followingCount·isFollowing"]
+    BRANCH{"currentUserId === id ?"}
+    EDIT["Edit Profile + SettingButton"]
+    FOLLOW["FollowButton (client)"]
+    FORM["form action={formAction}\nhidden userId + action"]
+    ACTION["toggleFollowUserAction (server)\nPOST·DELETE /api/follow/[id]"]
+    REFRESH["router.refresh()"]
+
+    PAGE --> HEADER --> API
+    HEADER --> BRANCH
+    BRANCH -->|"본인"| EDIT
+    BRANCH -->|"타인"| FOLLOW --> FORM --> ACTION
+    ACTION -->|"state 반환"| REFRESH
+    REFRESH --> HEADER
 ```
 
-- **postgres_changes 구독**: Supabase Realtime의 `postgres_changes` 이벤트로 DB 변경 사항을 WebSocket으로 수신.
-- **TanStack Query 캐시 갱신**: 댓글 영역에서 새 댓글 도착 시 React Query 캐시를 갱신해 화면이 자동 반영되도록 연동.
-- **구독 핸들 보관**: 알림 영역에서 Zustand 스토어가 구독 해제 핸들을 함께 보관해 재진입·사용자 전환 시 이전 구독을 정리한 뒤 재구독, 중복 구독 누수 방지.
+- **프로필 컴포넌트 합성**: `ProfileHeader`를 async 서버 컴포넌트로 만들어 `user-profile` API에서 팔로워·팔로잉·게시글 카운트와 `isFollowing`을 한 번에 받아 렌더하고, `page.tsx`가 이를 `Suspense`(`ProfileHeaderSkeleton` 폴백)로 감싸 `InfiniteSurveyList`와 함께 합성했습니다.
+- **본인·타인 분기**: `currentUserId === id` 비교로 본인이면 `Edit Profile`·`SettingButton`, 타인이면 `FollowButton`을 렌더해 같은 헤더 컴포넌트가 두 시점을 처리하도록 했습니다.
+- **서버 액션 팔로우 토글**: `FollowButton`을 `useActionState(toggleFollowUserAction, null)` 클라이언트 컴포넌트로 두고, `form` action으로 hidden `userId`와 `follow`/`unfollow` 값을 제출하면 서버 액션이 `/api/follow/[id]`에 POST·DELETE를 보내도록 했습니다.
+- **router.refresh로 카운트·버튼 재동기화**: 서버 액션이 결과를 반환하면 `useEffect`에서 `router.refresh()`를 호출해 서버 컴포넌트 트리를 다시 페칭, 팔로워 카운트와 `isFollowing` 버튼 상태를 한 응답으로 맞췄습니다.
 
 #### 3. 결과
 
-- **성과**: 새로고침 없이 새 댓글·알림이 반영되는 라이브 환경을 갖췄고, 폴링 제거로 불필요한 요청을 줄였습니다.
-- **배운 점**: Zustand 스토어에 postgres_changes 구독 해제 핸들을 함께 보관해 재진입·사용자 전환 시 이전 구독을 정리한 뒤 재구독하도록 만들어 중복 구독 누수가 사라졌습니다.
+- **성과**: 프로필 화면과 홈 사이드바가 같은 `user-profile` 응답을 쓰도록 정리해 카운트 표시 로직 중복을 없앴고, 팔로우·언팔로우 직후 버튼 라벨과 팔로워 숫자가 같은 갱신에서 함께 바뀌어 어긋남이 사라졌습니다.
+- **배운 점**: 팔로우 토글을 클라이언트 상태가 아니라 서버 액션 처리 후 `router.refresh()`로 서버 컴포넌트를 재페칭하게 두니, 버튼 상태와 카운트가 한 출처에서 갱신돼 따로 동기화 코드를 둘 필요가 없었습니다.
 
-### Case 4. @supabase/ssr 미들웨어 인증 + OAuth 콜백 X-Forwarded-Host 오리진 복원
+### Case 4. @modal 인터셉팅 라우트로 팔로워·팔로잉 목록을 모달·독립 페이지로
 
 #### 1. 문제 원인
 
-- 인증되지 않은 사용자의 보호 경로 접근을 차단하려면 서버 측 세션 검증이 필요했고, 클라이언트 단독 검증은 보호 라우트 fallback이 깜빡이는 결함이 있었습니다.
-- 로드밸런서·리버스 프록시 환경에서 OAuth 콜백 URL을 만들 때 `request.url`의 host가 내부 호스트로 보여 잘못된 도메인으로 리다이렉트되는 사고가 발생할 수 있었습니다.
-- 미들웨어 인증·OAuth 콜백 두 흐름이 분리되어 있으면 인증 사고가 어느 경로에서 발생했는지 추적이 어려웠습니다.
+- 프로필에서 팔로워·팔로잉 목록을 열 때 별도 페이지로 이동하면 프로필 스크롤 위치와 컨텍스트가 사라져 다시 돌아오는 흐름이 끊겼습니다.
+- 목록을 모달로만 두면 공유 링크·새로고침으로 직접 진입했을 때 모달 단독으로는 화면이 성립하지 않는 문제가 있었습니다.
 
 #### 2. 해결 과정
 
-두 흐름을 한 시스템 안에 함께 두었습니다.
+```mermaid
+graph TD
+    USER["사용자"]
 
-- **인증 흐름**: 사용자 요청을 받은 `middleware.ts`가 `getUser`로 세션을 검증해 보호 라우트면 인증 분기, 미인증이면 로그인 리다이렉트로 보냅니다
-- **OAuth 콜백 흐름**: OAuth provider 콜백이 `app/auth/callback`에 도착하면 X-Forwarded-Host 헤더로 원본 오리진을 복원해 올바른 도메인으로 리다이렉트합니다
+    subgraph CASE_CLIENT["프로필에서 클릭"]
+        PROFILE["app/profile/[id]"]
+        INT["@modal/(.)followers·(.)followings 인터셉트"]
+        MODAL["UserListModal\nDialog 오버레이"]
+    end
 
-- **@supabase/ssr 미들웨어**: `middleware.ts`에서 `@supabase/ssr` 기반으로 매 요청마다 서버 측 세션을 검증하고 미인증 사용자를 로그인 페이지로 리다이렉트.
-- **getUser() 호출**: 미들웨어가 `supabase.auth.getUser()`로 토큰 유효성을 매 요청 검증해 만료 토큰 사용을 차단.
-- **X-Forwarded-Host 우선 참조**: OAuth 콜백 라우트(`app/auth/callback`)에서 `request.headers.get('x-forwarded-host')`를 우선 참조해 원본 오리진을 복원, 로드밸런서 환경에서도 올바른 도메인으로 리다이렉트.
-- **콜백 라우트 분리**: 콜백 라우트는 `[locale]`에 종속시키지 않아 OAuth provider 측 등록 리다이렉트 URL 관리 비용을 줄였습니다.
+    subgraph CASE_DIRECT["새로고침·직접 URL"]
+        DIRECT["app/followers·followings\n독립 페이지"]
+    end
+
+    USER --> PROFILE --> INT --> MODAL
+    USER -->|"새로고침"| DIRECT
+    MODAL -->|"router.back()"| PROFILE
+```
+
+- **인터셉팅 라우트 모달**: `@modal/(.)followers`·`@modal/(.)followings`로 프로필에서 클릭한 팔로워·팔로잉 목록을 `UserListModal` Dialog 오버레이로 띄우고, 닫을 때 `router.back()`으로 프로필로 복귀.
+- **독립 페이지 폴백**: 같은 목록을 `app/followers`·`app/followings` 독립 라우트에도 두어 새로고침·직접 URL 진입 시 같은 모달 컴포넌트가 전체 페이지로 렌더되도록 분기.
+- **빈 슬롯·목록 검색**: `@modal/default.tsx`로 슬롯 비활성 라우트의 트리를 보존하고, 모달 안 `SearchBar`로 `/api/profile/[id]/followers`·`followings` 응답을 username 기준으로 필터링.
 
 #### 3. 결과
 
-- **성과**: 미인증 사용자 보호 경로 접근이 서버 단계에서 차단되어 클라이언트 fallback 깜빡임이 사라지고, 로드밸런서 환경에서도 OAuth 콜백이 원본 도메인으로 정확히 돌아옵니다.
-- **배운 점**: middleware.ts의 getUser()로 매 요청 세션을 검증하고 OAuth 콜백에서 x-forwarded-host를 우선 참조하도록 두어 보호 라우트 fallback 깜빡임과 로드밸런서 환경의 잘못된 리다이렉트가 함께 사라졌습니다.
+- **성과**: 프로필에서 팔로워·팔로잉을 열 때 프로필 스크롤·컨텍스트가 보존된 채 모달이 뜨고, 공유 링크·새로고침으로 같은 URL에 직접 들어와도 독립 페이지로 동일한 목록이 렌더됩니다.
+- **배운 점**: 인터셉팅 라우트 모달과 독립 라우트를 같은 `UserListModal`로 묶어 클라이언트 네비게이션은 오버레이, 직접 진입은 전체 페이지로 한 URL에서 두 진입을 처리했습니다.
