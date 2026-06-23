@@ -25,6 +25,7 @@ tags: [moc, fe]
 - 
 
 ## Currently learning (budding)
+- [[_roadmap/_MOC]] — **12주 기본기 재정비 로드맵** (계획·습관·학습 인덱스·프로젝트 소유권)
 - [[react/_MOC]] — 딥다이브 시작 (32개, 1-2주 분량)
 - [[performance/core-web-vitals/웹-성능-측정]] — LCP·CLS·INP 측정·개선
 - [[css-styling/html-css-기초]] — 박스 모델·시맨틱·접근성
