@@ -1,10 +1,10 @@
 ### MindGraph (AI 지식 캡처 & 그래프 시각화)
 
-서비스 개요: ChatGPT·Gemini·Claude·Grok 4개 LLM 답변을 캡처해 의미 단위로 묶고 D3.js로 시각화하는 Chrome Extension·Next.js 웹앱입니다. 기획·설계·개발·QA·내부 검증을 1인이 담당했고 도메인 getmindgraph.com 등록 후 출시 전 1인 프로토타입 단계입니다.
+서비스 개요: ChatGPT·Gemini·Claude·Grok 4개 LLM 답변을 캡처해 의미 단위로 묶고 Cytoscape.js로 시각화하는 Chrome Extension·Next.js 웹앱입니다. 기획·설계·개발·QA·내부 검증을 1인이 담당했고 도메인 getmindgraph.com 등록 후 출시 전 1인 프로토타입 단계입니다.
 
 팀원: 1명 (1인 PO·풀스택 개발, 출시 후 응대 대비 인프라 사전 구축 중)
 
-기술 스택: TypeScript, Next.js 16, React 19, D3.js, Claude Code, Chrome Extension Manifest V3, IndexedDB, Supabase, GitHub Actions
+기술 스택: TypeScript, Next.js 16, React 19, Cytoscape.js, React Flow, Claude Code, Chrome Extension Manifest V3, IndexedDB, Supabase, GitHub Actions
 
 - 4 LLM의 잦은 UI 변경에 단일 파일 수정으로 대응하기 위해 답변 DOM 선택자를 detector.ts SELECTORS에 모으고 hostname 자동 감지로 통합 레이어를 만들었습니다.
 - 1인 운영이 가능하도록 Claude Code 위에 9개 훅·plan·build·qa·ship 4 phase /sprint·4중 SSOT 자동 동기를 설계해 sprint 라이프사이클 반복 작업을 자동화했습니다.

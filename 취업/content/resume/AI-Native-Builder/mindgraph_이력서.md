@@ -4,7 +4,7 @@
 
 팀원: 1명 (1인 AI 협업 운영)
 
-기술 스택: TypeScript, Next.js 16, React 19, D3.js, Claude Code, Chrome Extension Manifest V3, IndexedDB, Supabase, GitHub Actions, LLM API (OpenAI·Anthropic·Google·xAI)
+기술 스택: TypeScript, Next.js 16, React 19, Cytoscape.js, React Flow, Claude Code, Chrome Extension Manifest V3, IndexedDB, Supabase, GitHub Actions, LLM API (OpenAI·Anthropic·Google·xAI)
 
 - 4 LLM의 잦은 UI 변경에 단일 파일 수정으로 대응하기 위해 답변 DOM 선택자를 detector.ts SELECTORS에 모으고 hostname 자동 감지로 통합 레이어를 만들었습니다.
 - Claude Code 위에 9개 훅(차단 4·보조 5)과 plan·build·qa·ship 4 phase /sprint·4중 SSOT 자동 동기를 설계해 sprint 라이프사이클 반복 작업을 한 명령 흐름으로 자동화했습니다.

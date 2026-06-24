@@ -1,17 +1,25 @@
 ---
 title: 호이스팅과 TDZ
-aliases: [hoisting, 호이스팅, TDZ, temporal dead zone]
+aliases:
+  - hoisting
+  - 호이스팅
+  - TDZ
+  - temporal dead zone
 type: concept
 status: budding
 created: 2026-06-23
 updated: 2026-06-23
-tags: [fe/javascript, status/budding]
+tags:
+  - fe/javascript
+  - status/budding
 related:
   - "[[_MOC]]"
   - "[[const-let-var]]"
   - "[[실행-컨텍스트-메모리]]"
-  - "[[../_roadmap/_MOC]]"
-source: ["MDN: Hoisting", "MDN: let (Temporal dead zone)"]
+  - "[[FE/_Roadmap/_MOC]]"
+source:
+  - "MDN: Hoisting"
+  - "MDN: let (Temporal dead zone)"
 ---
 
 # 호이스팅과 TDZ
@@ -119,7 +127,7 @@ for (let j = 0; j < 3; j++) {
 - [[_MOC]]
 - [[const-let-var]]
 - [[실행-컨텍스트-메모리]]
-- [[../_roadmap/_MOC]]
+- [[FE/_Roadmap/_MOC]]
 
 ## Sources
 

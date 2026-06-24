@@ -1,6 +1,6 @@
 ## [MindGraph] - AI 지식 캡처 & 그래프 시각화
 
-ChatGPT·Gemini·Claude·Grok 4개 LLM 서비스의 답변을 캡처해 의미 단위로 묶고 D3.js로 시각화하는 Chrome Extension·Next.js 웹앱입니다. React 19·Next.js 16 App Router·D3·Tiptap·next-intl 다국어 라우팅을 한 코드 베이스에서 다루며, Vite 3종(Service Worker·Content Script·Bridge) 빌드 설정과 Next.js transpilePackages·StrictMode 정책 같은 빌드·번들 결정으로 Manifest V3 Extension과 Web 사이 메시지 통신·origin 검증까지 한 시스템 안에 두었습니다.
+ChatGPT·Gemini·Claude·Grok 4개 LLM 서비스의 답변을 캡처해 의미 단위로 묶고 Cytoscape.js로 시각화하는 Chrome Extension·Next.js 웹앱입니다. React 19·Next.js 16 App Router·Cytoscape.js·React Flow·Tiptap·next-intl 다국어 라우팅을 한 코드 베이스에서 다루며, Vite 3종(Service Worker·Content Script·Bridge) 빌드 설정으로 Manifest V3 Extension과 Web 사이 메시지 통신·origin 검증까지 한 시스템 안에 두었습니다.
 
 ### 전체적인 아키텍처
 
@@ -17,13 +17,13 @@ graph TD
         LO["app/[locale]\nen·ko 다국어"]
         CANVAS["canvas/[topicId]"]
         CLI["'use client' 경계"]
-        ENG["lib/engine\n그래프 렌더러"]
+        ENG["graph-view\nCytoscape.js 캔버스"]
         TT["editor-extensions.ts\n확장 등록"]
         I18N["i18n + messages\nen.json, ko.json"]
     end
 
     subgraph CFG["Next.js 설정"]
-        NC["next.config.ts\nreactStrictMode false\ntranspilePackages d3"]
+        NC["next.config.ts\ntranspilePackages\n(d3 유틸 ESM)"]
     end
 
     CS -->|"postMessage origin 검증"| BR
@@ -34,46 +34,49 @@ graph TD
     NC -.-> CLI
 ```
 
-- **Architecture**: Server Component 경계와 `'use client'` 레이어를 분리해 D3 같은 명령형 DOM 라이브러리를 한쪽에 격리하고, `[locale]` 라우팅 + en/ko 메시지로 다국어를 코드 베이스 안에서 다루며, Tiptap 확장을 `editor-extensions.ts`에 한 곳에 등록합니다(`lib/tiptap`에는 drag-handle만 별도).
+- **Architecture**: Server Component 경계와 `'use client'` 레이어를 분리해 Cytoscape.js 같은 Canvas/DOM 렌더 라이브러리를 한쪽에 격리하고, `[locale]` 라우팅 + en/ko 메시지로 다국어를 코드 베이스 안에서 다루며, Tiptap 확장을 `editor-extensions.ts`에 한 곳에 등록합니다(`lib/tiptap`에는 drag-handle만 별도).
 
-### Case 1. D3.js DOM 조작과 Next.js SSR 충돌을 분리한 클라이언트 전용 그래프 엔진 격리
+### Case 1. D3 force 그래프 엔진을 Cytoscape.js로 빅뱅 이관 (ADR-0010)
 
 #### 1. 문제 원인
 
-- D3.js는 ESM 패키지이며 서버 환경에서 임포트하면 빌드 실패나 SSR 단계 DOM API 접근 오류가 발생했습니다.
-- Next.js `reactStrictMode`가 켜진 dev 모드에서 `useEffect`가 두 번 실행되면서 D3 zoom이 같은 SVG에 이중 바인딩되어 휠 한 번에 두 단계가 줌되는 결함이 있었습니다.
-- 그래프 엔진을 일반 모듈로 두면 Server Component에서 임포트하는 경로가 생겨 빌드 시점에 잡히지 않는 사고가 가능했습니다.
+- 그래프 렌더러를 D3 force 시뮬레이션과 circle-renderer로 직접 구현해, 레이아웃·줌·라벨 표시를 모두 손으로 관리하면서 유지 비용이 누적됐습니다.
+- 제품 방향이 옵시디언식 플랫 그래프(탐색·발견 보조 뷰)로 바뀌고 계층 표현은 사이드바 트리가 전담하게 되면서(ADR-0009), 직접 구현한 force 엔진의 복잡도가 실제 필요보다 커졌습니다.
+- D3는 SVG로 렌더해 노드가 늘면 DOM 수가 비례해 늘어나는 구조였습니다.
 
 #### 2. 해결 과정
 
 ```mermaid
 graph TD
-    subgraph SERVER["Server Component 경계"]
-        APP["app 라우트\n페이지 셸"]
+    subgraph OLD["이관 전 (직접 구현 D3)"]
+        D3F["lib/engine/force-bubble\ncircle-renderer + flat-simulation"]
     end
 
-    subgraph CLIENT["'use client' 레이어"]
-        VIEW["canvas-view.tsx\n'use client'"]
-        HOOK["graph-view 훅\n'use client'"]
-        ENG["lib/engine\nReact 의존성 없는 D3 모듈"]
+    subgraph NEW["이관 후 (Cytoscape.js, ADR-0010)"]
+        SHARED["lib/engine/shared\ntransformToGraphData 재사용"]
+        CY["graph-canvas.tsx\nCytoscape Core (Canvas 렌더)"]
+        FC["cytoscape-fcose\n버블(플랫 그래프)"]
+        DG["cytoscape-dagre\n트리(LTR)"]
+        RF["React Flow\n마인드맵 트리 뷰"]
     end
 
-    NEXTCFG["next.config.ts\nreactStrictMode: false\ntranspilePackages: d3, internmap,\n  robust-predicates, d3-force,\n  d3-zoom, d3-drag, d3-selection"]
-
-    APP -->|"클라이언트 경계 진입"| VIEW
-    VIEW --> HOOK
-    HOOK --> ENG
-    NEXTCFG -.->|"ESM transpile, 이중 실행 차단"| CLIENT
+    D3F -.->|"빅뱅 교체"| CY
+    SHARED --> CY
+    CY --> FC
+    CY --> DG
+    SHARED --> RF
 ```
 
-- **엔진 모듈 격리**: `lib/engine` 그래프 렌더러를 React 의존성 없는 순수 D3 모듈로 분리하고, `'use client'` 선언된 `canvas-view.tsx`와 `use-tree-sync` 같은 훅에서만 호출되도록 호출 경계를 단방향으로 고정했습니다.
-- **reactStrictMode 비활성화**: `next.config.ts`의 `reactStrictMode: false`로 dev 모드 이중 실행을 차단해 D3 zoom 이중 바인딩을 막았고, 의도(`StrictMode 비활성화: D3 렌더러 이중 실행 방지`)를 주석에 함께 기록했습니다.
-- **D3 ESM transpile**: `transpilePackages: ['d3', 'internmap', 'robust-predicates', 'd3-force', 'd3-zoom', 'd3-drag', 'd3-selection']`를 설정해 D3 계열 ESM 패키지가 서버 빌드 경로에 들어와도 Next.js가 transpile하도록 했습니다.
+- **빅뱅 이관**: D3 force·circle-renderer를 제거하고 그래프 렌더링을 Cytoscape.js로 전면 교체했습니다(ADR-0010). 노드·엣지 변환 로직(`lib/engine/shared`의 `transformToGraphData`)은 재사용해 데이터 계층은 유지했습니다.
+- **레이아웃 라이브러리 위임**: 버블 뷰는 `cytoscape-fcose` 포스 레이아웃, 트리 뷰는 `cytoscape-dagre` 가로 레이아웃으로, 직접 구현하던 force 계산을 라이브러리 내장 레이아웃에 맡겼습니다.
+- **Canvas 렌더 + React 라이프사이클 종속**: Cytoscape는 SVG가 아닌 Canvas로 렌더하므로 `'use client'` 컴포넌트에서 `useRef`로 Cytoscape Core 인스턴스를 잡고 `useEffect` 마운트/정리에 종속시켰으며, 줌 임계에 따른 라벨 표시는 `show-label` 클래스 토글로 제어합니다.
+- **트리 뷰 분리**: 계층 마인드맵은 React Flow(`@xyflow/react`)로 분리해 탐색용 그래프(Cytoscape)와 계층 트리(React Flow)를 'Network' 버튼으로 토글합니다.
 
 #### 3. 결과
 
-- **성과**: D3 zoom 이중 바인딩이 사라져 휠 한 번에 한 단계만 줌되도록 정상화했고, 그래프 엔진이 Server Component에 잘못 임포트되어도 영향 범위가 클라이언트 경계 안으로 한정되었습니다.
-- **배운 점**: D3처럼 DOM에 직접 접근하는 라이브러리를 Next.js App Router에서 다룰 때 `'use client'` 선언 위치·ESM transpile 설정·StrictMode 정책 세 가지를 함께 맞춰, zoom 이중 바인딩 없이 렌더링되도록 했습니다.
+- **성과**: 직접 유지하던 D3 force·circle-renderer 코드를 제거하고 레이아웃·줌·렌더를 Cytoscape.js 내장 기능으로 위임해 그래프 렌더링 코드의 유지 범위를 줄였고, SVG 노드 누적 대신 Canvas 렌더로 전환했습니다.
+- **솔직한 트레이드오프**: 빅뱅 이관 중 미니맵·마퀴 선택·유사도 오버레이는 일시 미구현 상태이며 순차 복원 중입니다(SVG 의존 오버레이는 Canvas 기준으로 재설계가 필요).
+- **배운 점**: 직접 구현한 렌더 엔진을 유지할지 라이브러리에 위임할지를 제품 방향(플랫 그래프 + 트리 분리)에 맞춰 판단해, force 계산을 Cytoscape 내장 레이아웃에 넘기는 이관을 결정·실행했습니다.
 
 ### Case 2. Tiptap 에디터 확장 모듈화와 next-intl 다국어 라우팅 단일화
 

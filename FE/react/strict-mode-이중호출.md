@@ -1,17 +1,26 @@
 ---
 title: StrictMode 이중 호출
-aliases: [StrictMode, strict mode, 이중호출, 이중 렌더, double invoke]
+aliases:
+  - StrictMode
+  - strict mode
+  - 이중호출
+  - 이중 렌더
+  - double invoke
 type: concept
 status: budding
 created: 2026-06-23
 updated: 2026-06-23
-tags: [fe/react, status/budding]
+tags:
+  - fe/react
+  - status/budding
 related:
   - "[[_MOC]]"
   - "[[lifecycle-useEffect]]"
   - "[[리렌더링-트리거]]"
-  - "[[../_roadmap/_MOC]]"
-source: ["react.dev: StrictMode", "react.dev: Synchronizing with Effects (cleanup)"]
+  - "[[FE/_Roadmap/_MOC]]"
+source:
+  - "react.dev: StrictMode"
+  - "react.dev: Synchronizing with Effects (cleanup)"
 ---
 
 # StrictMode 이중 호출
@@ -127,13 +136,13 @@ useEffect(() => {
 
 ## 내 프로젝트 연결
 
-MindGraph에서 `reactStrictMode`를 비활성화해 zoom 이중 바인딩을 막은 적이 있다. 원인을 짚어보면, zoom 동작을 등록하는 코드가 effect 안에서 매 setup마다 DOM 노드에 핸들러를 붙이는 구조였고 cleanup이 없었기 때문에, StrictMode의 setup → cleanup → setup 순서에서 cleanup이 비어 있어 핸들러가 두 번 붙은 것으로 보인다. StrictMode를 끄면 setup이 한 번만 돌아 증상은 사라지지만, 라이브러리 인스턴스가 남기는 핸들러 누수 자체는 그대로다. 끄는 대신 cleanup으로 고친다면 effect가 어떤 형태여야 하는지 직접 설계해보라. (예: setup에서 만든 zoom 인스턴스 참조를 cleanup에서 해제하거나, 노드에 붙인 핸들러를 제거하는 return 함수를 어떻게 쓸지. 면접에서 "끄지 않고 고치려면?" 꼬리 질문이 반드시 들어온다.)
+chatGraph의 D3 그래프를 데이터 조인으로 재설계하면서, svg 프레임과 forceSimulation을 만드는 마운트 effect에 cleanup(simulation.stop과 컨테이너 정리)을 넣었다. StrictMode 개발 모드의 setup → cleanup → setup 이중 마운트에서, cleanup이 이전 시뮬레이션을 멈추고 DOM·ref를 정리하므로 두 번째 setup이 깨끗한 상태에서 다시 생성된다. cleanup이 없으면 첫 시뮬레이션이 멈추지 않고 두 번째와 겹쳐 노드가 떨리거나 이벤트가 중복 바인딩된다. StrictMode를 끄는 우회 대신 effect를 정리 가능하게(idempotent) 만드는 게 정석이다. 끄는 대신 cleanup으로 고친다면 effect가 어떤 형태여야 하는지 직접 설계해보라. (과거 MindGraph는 D3 시절 reactStrictMode를 꺼서 우회했지만, 지금은 그래프 엔진이 Cytoscape로 이관됐다.)
 
 ## Related
 - [[_MOC]]
 - [[lifecycle-useEffect]]
 - [[리렌더링-트리거]]
-- [[../_roadmap/_MOC]]
+- [[FE/_Roadmap/_MOC]]
 
 ## Sources
 - react.dev: StrictMode

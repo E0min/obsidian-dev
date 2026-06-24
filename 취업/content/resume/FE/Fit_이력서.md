@@ -8,7 +8,7 @@
 
 - 수백 ms 단위의 저지연 오디오 전송을 위해 RTCPeerConnection API로 발표자·청중 양측 시그널링 클라이언트를 구현하고 STOMP 토픽 위에서 SDP와 ICE 후보를 교환하는 1:N 오디오 송수신 흐름을 설계했습니다.
 
-- SDP 협상 전 도착한 ICE 후보 유실로 연결 실패가 반복되던 문제를 해결하기 위해 ref에 ICE 큐를 두고 setRemoteDescription 직후 일괄 flush하는 버퍼링 로직을 적용해 PeerConnection 성공률을 높였습니다.
+- SDP 협상 완료 전 도착한 ICE 후보가 유실되어 초기 연결 실패가 반복되던 문제를 해결했습니다. 이를 방지하기 위해 useRef 기반의 ICE 큐를 설계하여 초기 후보들을 버퍼링하고, setRemoteDescription이 완료된 직후 일괄 flush하는 비동기 순서 보장 로직을 구현했습니다. 이를 통해 시그널링 과정에서의 패킷 유실을 방지하고 PeerConnection 초기 연결 성공률을 기존 대비 큰 폭으로 개선하여 실시간 송수신의 안정성을 확보했습니다.
 
 - 모바일 망과 행사장 Wi-Fi의 일시 단절에 대비해 STOMP 클라이언트에 reconnectDelay 5초·4초 간격 heartbeat를 설정하고 자체 TURN 서버를 ICE 후보군에 추가해 NAT 환경 연결률을 유지했습니다.
 

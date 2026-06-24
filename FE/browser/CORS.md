@@ -1,16 +1,25 @@
 ---
 title: CORS
-aliases: [cors, 교차 출처, preflight, SOP, same-origin policy]
+aliases:
+  - cors
+  - 교차 출처
+  - preflight
+  - SOP
+  - same-origin policy
 type: concept
 status: budding
 created: 2026-06-23
 updated: 2026-06-23
-tags: [fe/browser, status/budding]
+tags:
+  - fe/browser
+  - status/budding
 related:
   - "[[../_MOC]]"
   - "[[브라우저-저장소]]"
-  - "[[../_roadmap/_MOC]]"
-source: ["MDN: CORS", "MDN: Same-origin policy"]
+  - "[[FE/_Roadmap/_MOC]]"
+source:
+  - "MDN: CORS"
+  - "MDN: Same-origin policy"
 ---
 
 # CORS
@@ -115,7 +124,7 @@ xAB에서 로드밸런서 뒤에 둔 OAuth 콜백이 출처 오류로 실패했�
 
 - [[../_MOC]]
 - [[브라우저-저장소]]
-- [[../_roadmap/_MOC]]
+- [[FE/_Roadmap/_MOC]]
 
 ## Sources
 

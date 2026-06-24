@@ -1,6 +1,6 @@
 ## [MindGraph] - AI 지식 캡처 & 그래프 시각화
 
-ChatGPT·Gemini·Claude·Grok 4개 LLM 서비스의 답변을 hostname 자동 감지로 캡처해 의미 단위로 묶고 D3.js로 시각화하는 Chrome Extension·Next.js 웹앱입니다. 도메인 getmindgraph.com을 등록한 출시 전 단계의 1인 LLM 솔루션 프로토타입입니다. 출시 후 들어올 사용자 피드백을 다음 sprint로 곧장 이어 붙이려고, 사용자 피드백·에러 채널과 모니터링 인프라(PostHog·Sentry·OpenTelemetry·api/feedback·api/error-log)를 출시 전에 먼저 갖췄습니다. Claude Code 위에 9개 훅·plan·build·qa·ship 4 phase /sprint 워크플로우·4중 SSOT 자동 동기를 직접 설계했습니다 (Case 1에서 상세히 설명합니다).
+ChatGPT·Gemini·Claude·Grok 4개 LLM 서비스의 답변을 hostname 자동 감지로 캡처해 의미 단위로 묶고 Cytoscape.js로 시각화하는 Chrome Extension·Next.js 웹앱입니다. 도메인 getmindgraph.com을 등록한 출시 전 단계의 1인 LLM 솔루션 프로토타입입니다. 출시 후 들어올 사용자 피드백을 다음 sprint로 곧장 이어 붙이려고, 사용자 피드백·에러 채널과 모니터링 인프라(PostHog·Sentry·OpenTelemetry·api/feedback·api/error-log)를 출시 전에 먼저 갖췄습니다. Claude Code 위에 9개 훅·plan·build·qa·ship 4 phase /sprint 워크플로우·4중 SSOT 자동 동기를 직접 설계했습니다 (Case 1에서 상세히 설명합니다).
 
 ### 전체적인 아키텍처
 

@@ -1,6 +1,6 @@
 ## [chatGraph] - AI 대화 시각화 플랫폼
 
-기존 선형 채팅 UI에서 한 갈래 흐름만 살아남고 도중에 떠올린 분기 질문·맥락이 휘발되어 사용자가 이전 맥락을 다시 짜맞춰야 하는 비용이 컸습니다. chatGraph는 AI와의 대화를 꼬리물기 형태의 그래프로 시각화해 분기와 깊이를 보존하는 웹 서비스입니다. 본인은 4인 팀의 FE 한 명으로 참여해 React 라이프사이클 통합·Suspense 경계 설계·D3 cleanup 패턴을 담당했습니다.
+기존 선형 채팅 UI에서 한 갈래 흐름만 살아남고 도중에 떠올린 분기 질문·맥락이 휘발되어 사용자가 이전 맥락을 다시 짜맞춰야 하는 비용이 컸습니다. chatGraph는 AI와의 대화를 꼬리물기 형태의 그래프로 시각화해 분기와 깊이를 보존하는 웹 서비스입니다. 본인은 4인 팀의 FE 한 명으로 참여해 React 라이프사이클 통합·Suspense 경계 설계·D3 데이터 조인 기반 부분 갱신을 담당했습니다.
 
 ### 전체적인 아키텍처
 
@@ -28,7 +28,7 @@ graph TD
 
     subgraph D3["D3 시각화"]
         VIZ["visualizer useEffect"]
-        CL["cleanup\nselectAll remove"]
+        JOIN["데이터 조인\nenter/update/exit 부분 갱신"]
     end
 
     ROUTE --> VIEW --> STD
@@ -38,10 +38,10 @@ graph TD
     UQT --> UTD --> SUS
     UQT --> UTI
     UQT --> UGM
-    STD --> VIZ --> CL
+    STD --> VIZ --> JOIN
 ```
 
-- **Architecture**: Feature-First 디렉토리(`app`·`features`·`views`·`shared`) 위에 훅 책임을 4개로 분리하고, 라우트별로 Suspense 경계와 Optimistic 경로를 나눠 D3 시각화를 React useEffect cleanup으로 안전하게 통합한 구조.
+- **Architecture**: Feature-First 디렉토리(`app`·`features`·`views`·`shared`) 위에 훅 책임을 4개로 분리하고, 라우트별로 Suspense 경계와 Optimistic 경로를 나눠 D3 시각화를 노드 id 키 데이터 조인으로 변경분만 부분 갱신하도록 통합한 구조.
 
 ### Case 1. 거대 훅 책임 분리와 Feature-First 디렉토리 도입 (843줄에서 355줄로 축소)
 
@@ -149,33 +149,39 @@ flowchart LR
 - **성과**: 사이드바 기반 라우트 전환에서 빈 화면 노출 없이 트리가 그려지는 흐름을 확보했습니다.
 - **배운 점**: 사이드바 prefetch를 Zustand prefetchedResponse에 적재하고 useSuspenseQuery의 initialData로 주입해 사이드바 토픽 전환 시 Suspense fallback 노출 케이스를 prefetch 미적재 경로로만 한정했습니다.
 
-### Case 4. D3 + React useEffect cleanup 패턴으로 시각화 라이프사이클 안전화
+### Case 4. D3 데이터 조인으로 시각화 부분 갱신과 좌표 보존
 
 #### 1. 문제 원인
 
-- 팀원이 도입한 D3 Force Simulation은 SVG DOM을 직접 변형해서 React가 같은 SVG를 다시 그릴 때 잔여 노드·이벤트 리스너가 남아 시각적 결함이 발생했습니다.
-- 토픽이 바뀌거나 트리가 갱신될 때마다 이전 시뮬레이션 상태가 새 데이터 위에 덧씌워졌습니다.
+- 팀원이 도입한 D3 Force Simulation은 데이터가 바뀔 때마다 `selectAll("*").remove()`로 SVG 하위 트리를 통째로 지우고 hierarchy와 simulation을 다시 구성했습니다.
+- 전체 재생성 방식에서는 토픽이 갱신될 때 기존 노드의 좌표가 초기화되어 화면이 매번 다시 흩어졌고, defs 필터·zoom·tick 핸들러까지 매 갱신마다 재생성되어 불필요한 작업이 반복됐습니다.
+- React StrictMode의 이중 마운트와 잦은 데이터 변경이 겹치면 잔여 노드·중복 이벤트 리스너가 남을 여지도 있었습니다.
 
 #### 2. 해결 과정
 
 ```mermaid
 flowchart LR
-    DATA["ViewData 변경"]
-    DATA -->|"useEffect deps"| EFFECT["Effect 실행"]
-    EFFECT -->|"d3.select(svgRef)\n.selectAll('*').remove()"| CLEAR["SVG 초기화"]
-    CLEAR -->|"hierarchy 재구성"| BUILD["새 그래프 빌드"]
-    BUILD -->|"simulation tick"| RENDER["렌더링"]
-    EFFECT -->|"return"| UNMOUNT["cleanup\n안전 정리"]
+    MOUNT["마운트 1회"]
+    MOUNT -->|"svg 프레임·defs·zoom·레이어·forceSimulation·tick 생성"| FRAME["프레임·시뮬레이션 재사용"]
+
+    DATA["data/currentPath 변경"]
+    DATA -->|"useEffect deps"| JOIN["노드 id 키 데이터 조인"]
+    JOIN -->|".data(nodes, d=>d.data.id).join(...)"| PART["enter/update/exit 부분 갱신"]
+    PART -->|"positionsRef로 기존 좌표 주입"| KEEP["좌표 보존"]
+    KEEP -->|"simulation.nodes·forceLink.links 갱신"| HEAT["alpha(0.3) restart 재가열"]
+    HEAT -->|"같은 프레임 재사용"| FRAME
 
     REF["onNodeClick\n자주 변하는 콜백"]
-    REF -.->|"useRef 감싸기"| EFFECT
+    REF -.->|"useRef 감싸기"| JOIN
 ```
 
-- **SVG 초기화 패턴**: visualizer 컴포넌트 useEffect에서 `d3.select(svgRef).selectAll("*").remove()`로 매 갱신마다 SVG 하위 트리를 초기화한 뒤 hierarchy·simulation을 다시 구성하는 패턴을 정리했습니다.
-- **deps 최소화**: `onNodeClick` 같이 자주 변하는 콜백은 ref로 감싸 effect 의존성에서 분리하고, `currentPath` 등 시각적 강조에 영향을 주는 값만 deps에 포함해 불필요한 재구성을 막았습니다.
-- **팀 역할 분담**: 색상 알고리즘·호버 desaturate는 팀원 코드 유지, 본인은 통합 지점인 라이프사이클·cleanup 흐름에 집중했습니다.
+- **마운트 1회 프레임 재사용**: svg 프레임·defs 필터·zoom·레이어·forceSimulation·tick 핸들러를 마운트 시 한 번만 생성하고 이후 갱신에서 재사용해, 데이터가 바뀔 때마다 전체를 다시 만드는 작업을 없앴습니다.
+- **노드 id 키 데이터 조인**: data나 currentPath가 바뀌면 `.data(nodes, (d) => d.data.id).join(...)`으로 추가된 노드만 append하고 삭제된 노드만 remove하며 나머지는 유지해, 변경분만 DOM에 반영했습니다.
+- **좌표 보존과 재가열**: 기존 노드 좌표를 `positionsRef`에 보관했다가 조인 시 다시 주입해 화면이 흩어지지 않게 하고, `simulation.nodes`와 forceLink.links를 갱신한 뒤 `alpha(0.3)`로 restart해 새 노드만 자연스럽게 배치되도록 했습니다.
+- **deps 최소화**: `onNodeClick` 같이 자주 변하는 콜백은 ref로 감싸 effect 의존성에서 분리하고, `currentPath` 등 시각적 강조에 영향을 주는 값만 deps에 포함했습니다.
+- **팀 역할 분담**: 색상 알고리즘·호버 desaturate는 팀원 코드를 유지하고, 본인은 React 통합과 데이터 조인 재설계를 맡았습니다.
 
 #### 3. 결과
 
-- **성과**: 토픽이 바뀌거나 트리가 갱신될 때 SVG가 정상 재구성되어 잔여 노드·중복 이벤트 시각적 결함이 사라졌습니다.
-- **배운 점**: visualizer useEffect의 cleanup에서 selectAll('*').remove()로 SVG를 초기화한 뒤 hierarchy를 재구성하도록 분리해 토픽 전환 시 잔여 노드·중복 이벤트가 사라졌습니다.
+- **성과**: 데이터가 바뀔 때 변경된 노드만 부분 갱신하면서 기존 노드 좌표가 보존되어, 토픽 갱신 때마다 그래프가 다시 흩어지던 현상이 사라졌습니다.
+- **배운 점**: 전체 SVG를 지우고 다시 그리는 방식 대신 노드 id를 키로 한 enter/update/exit 조인으로 바꾸고 프레임·시뮬레이션을 마운트 1회만 생성해 재사용하니, 언마운트 cleanup에만 한 번 정리하는 키 조인 구조가 StrictMode 이중 마운트에도 안전하게 동작했습니다.

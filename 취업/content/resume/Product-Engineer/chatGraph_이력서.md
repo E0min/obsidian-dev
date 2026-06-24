@@ -14,4 +14,4 @@
 
 - 거대해진 페이지 컴포넌트를 TopicContentLayout·StandardChatView·OptimisticChatView 뷰 계층으로 나누고 findPathToNode 경로 탐색·토픽 토글 훅에 Vitest 회귀 테스트를 작성했습니다.
 
-- 팀원이 도입한 D3.js Force Simulation이 React 리렌더 시 SVG 트리와 충돌하는 문제를 useEffect cleanup과 `d3.selectAll("*").remove()` 패턴을 결합해 해결했습니다.
+- 팀원이 도입한 D3 Force Simulation과 React 리렌더 충돌을, 매 갱신마다 전체 SVG를 재생성하던 방식에서 노드 id 키 기반 enter/update/exit 데이터 조인으로 바꿔 변경 노드만 갱신하고 시뮬레이션을 재사용하도록 개선했습니다.

@@ -12,7 +12,7 @@
 
 - 사이드바 토픽 클릭 시 로딩 지연을 줄이기 위해 Zustand 스토어에 응답을 프리패치해 useSuspenseQuery의 initialData로 주입하여 라우트 전환 시 빈 화면 없이 데이터가 그려지도록 했습니다.
 
-- D3.js Force Simulation이 React 리렌더 시 SVG 트리와 충돌하던 문제를 해결하기 위해 useEffect cleanup과 `d3.selectAll("*").remove()`를 결합해 데이터 변경 시 SVG를 재구성하도록 했습니다.
+- D3 Force Simulation의 자체 DOM 제어 주기와 React 리렌더 주기가 충돌해, 데이터가 바뀔 때마다 전체 SVG를 지우고 처음부터 다시 그리는 방식으로 동작하고 있었습니다. 이를 노드 id를 키로 한 enter/update/exit 데이터 조인으로 재설계해 추가·삭제된 노드만 부분 갱신하고, svg 프레임·필터·forceSimulation을 마운트 시 1회 생성해 재사용하며 기존 노드 좌표를 보존하도록 바꿨습니다. 이를 통해 토픽 전환 시 전체 DOM 파괴·재건축을 제거하고 변경분만 반영하도록 개선했습니다.
 
 - 비대해진 페이지 컴포넌트를 TopicContentLayout·StandardChatView·OptimisticChatView로 분리하고 useSuspenseQuery 분기에 맞춰 Suspense 경계를 재설계했습니다.
 

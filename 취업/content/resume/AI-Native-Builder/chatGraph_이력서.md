@@ -16,4 +16,4 @@
 
 - 사이드바 토픽 클릭 시 발생하던 초기 로딩 지연을 줄이고자 Zustand 스토어에 응답을 프리패치해 useSuspenseQuery의 initialData로 주입하는 패턴으로 라우트 전환 시 빈 화면 없이 데이터를 즉시 렌더했습니다.
 
-- 팀원이 도입한 D3.js Force Simulation이 React 리렌더 시 SVG 트리와 충돌하는 문제를 해결하고자 useEffect cleanup과 `d3.selectAll("*").remove()`를 결합해 SVG를 다시 그리는 코드를 담당했습니다.
+- 팀원이 도입한 D3 Force Simulation과 React 리렌더 충돌을, 전체 SVG를 지우고 다시 그리던 방식에서 노드 id 키 기반 enter/update/exit 데이터 조인으로 바꿔 변경분만 부분 갱신하고 시뮬레이션을 재사용하도록 담당했습니다.

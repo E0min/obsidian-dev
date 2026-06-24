@@ -103,33 +103,33 @@ flowchart LR
 - **성과**: 사이드바 기반 토픽 탐색에서 빈 화면 노출 없이 LLM 응답 트리가 그려져, 사용자가 누적된 LLM 응답 사이를 빠르게 오가는 탐색 경험을 갖췄습니다.
 - **배운 점**: 토픽 전환 시 빈 화면이 뜨지 않도록 TanStack Query initialData와 Zustand prefetch 슬롯을 같은 키로 맞춰 두 캐시 계층이 충돌하지 않게 조립했습니다.
 
-### Case 3. LLM 응답 시각화를 React 라이프사이클에 안전하게 통합
+### Case 3. D3 데이터 조인으로 LLM 응답 시각화 부분 갱신
 
 #### 1. 문제 원인
 
-- 팀원이 도입한 D3 Force Simulation은 SVG DOM을 직접 변형해서 React가 같은 SVG를 다시 그릴 때 잔여 노드·이벤트 리스너가 남아 시각적 결함이 발생했습니다. LLM 응답이 추가될 때마다 화면이 깨지면 사용자는 응답 자체까지 의심합니다.
-- 토픽이 바뀌거나 트리가 갱신될 때마다 이전 시뮬레이션 상태가 새 데이터 위에 덧씌워져 LLM 응답 시각화가 일관되지 않았습니다.
+- 팀원이 도입한 D3 Force Simulation 시각화는 데이터가 바뀔 때마다 `selectAll("*").remove()`로 SVG 전체를 지우고 hierarchy·simulation을 처음부터 다시 구성했습니다. LLM 응답이 한 노드만 추가돼도 그래프 전체가 재생성됐습니다.
+- 매 갱신마다 시뮬레이션을 새로 만드니 기존 노드의 좌표가 초기화돼 화면 전체가 다시 흩어졌다 모이고, 토픽이 바뀌거나 트리가 갱신될 때마다 이전에 사용자가 보던 배치가 유지되지 않았습니다.
 
 #### 2. 해결 과정
 
 ```mermaid
 flowchart LR
     LLM[("LLM 응답 도착")]
-    LLM -->|"ViewData 변경"| Effect["useEffect"]
-    Effect -->|"selectAll remove"| Clear["SVG 초기화"]
-    Clear -->|"hierarchy 재구성"| Build["새 그래프 빌드"]
-    Build -->|"simulation tick"| Render["렌더링"]
-    Effect -->|"cleanup"| Unmount["안전 정리"]
+    LLM -->|"nodes/links 변경"| Join["data(nodes, id 키)\n.join(enter/update/exit)"]
+    Join -->|"추가/삭제 노드만"| Render["부분 갱신"]
+    Render -->|"positionsRef 적용"| Keep["기존 노드 좌표 보존"]
+    Keep -->|"alpha(0.3) restart"| Sim["마운트 1회 시뮬레이션 재가열"]
 ```
 
-- **SVG 초기화 패턴**: visualizer 컴포넌트 useEffect에서 `d3.select(svgRef).selectAll("*").remove()`로 매 갱신마다 SVG 하위 트리를 초기화한 뒤 hierarchy·simulation을 다시 구성합니다.
-- **deps 분리**: `onNodeClick` 같이 자주 변하는 콜백은 ref로 감싸 effect 의존성에서 분리하고, currentPath 등 시각적 강조 값만 deps에 포함해 불필요한 재구성을 막았습니다.
-- **팀 역할 분담**: 색상 알고리즘·호버 desaturate는 팀원 코드를 유지하고, 본인은 LLM 응답이 시각화에 안전하게 도달하는 통합 지점(라이프사이클·cleanup)에 집중했습니다.
+- **마운트 1회 프레임 재사용**: svg 프레임·defs(필터)·zoom·레이어·forceSimulation·tick은 마운트 시 한 번만 생성하고, 이후 갱신에서는 재생성하지 않고 그대로 재사용합니다. `selectAll("*").remove()`는 언마운트 cleanup에서만 1회 호출합니다.
+- **노드 id 키 데이터 조인**: data/currentPath가 바뀌면 `.data(nodes, (d) => d.data.id).join(...)`으로 추가·변경·삭제된 노드만 enter/update/exit 처리해 DOM에 부분 반영합니다. forceLink links와 simulation.nodes도 함께 갱신합니다.
+- **좌표 보존 후 재가열**: 기존 노드는 `positionsRef`에 저장한 좌표를 복원해 자리를 유지하고, 데이터 변경 후 `alpha(0.3).restart()`로 시뮬레이션만 재가열해 새 노드를 부드럽게 안착시킵니다. 키 기반 조인 덕분에 StrictMode 이중 마운트에서도 정리가 안전했습니다.
+- **팀 역할 분담**: 색상 알고리즘·호버 desaturate는 팀원 코드를 유지하고, 본인은 React 통합과 D3 데이터 조인 재설계를 맡았습니다.
 
 #### 3. 결과
 
-- **성과**: 토픽이 바뀌거나 LLM 응답이 추가될 때 SVG가 정상 재구성되어 잔여 노드·중복 이벤트로 인한 시각적 결함이 사라졌습니다.
-- **배운 점**: React 선언형 트리와 D3 명령형 SVG가 한 컴포넌트에 공존하는 구간에서 useEffect cleanup과 selectAll remove로 잔여 상태를 끊어, 데이터 갱신 시 시각적 결함을 없앴습니다.
+- **성과**: LLM 응답이 추가될 때 그래프 전체를 다시 그리지 않고 바뀐 노드만 갱신하며, 기존 노드는 좌표를 유지해 토픽 전환·트리 갱신에도 사용자가 보던 배치가 그대로 남았습니다.
+- **배운 점**: React 선언형 트리와 D3 명령형 SVG가 한 컴포넌트에 공존하는 구간에서, 전체 파괴·재생성 대신 노드 id를 키로 한 enter/update/exit 조인과 좌표 보존으로 변경분만 반영하는 방식을 익혔습니다.
 
 ### Case 4. LLM 응답 흐름을 받아낼 모듈 책임 분리 (843줄에서 355줄로 축소)
 

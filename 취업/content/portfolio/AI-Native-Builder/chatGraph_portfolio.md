@@ -23,7 +23,7 @@ graph TD
 ```
 - Next.js App Router 위에 Feature-First 디렉토리 구조를 적용해 도메인 기능과 페이지 조립, 공통 자원을 분리했습니다.
 - 본인은 FE 2명 중 1명으로 참여했으며, 아키텍처 재정비, 새 토픽 Optimistic 흐름, useSuspenseQuery 기반 데이터 패칭, 뷰 컴포지션 분리, 테스트 코드 작성을 담당했습니다.
-- D3 기반 그래프 시각화의 색상 알고리즘과 호버 인터랙션은 팀원이 주도했고, 본인은 React 라이프사이클 통합과 cleanup 로직을 담당했습니다.
+- D3 기반 그래프 시각화의 색상 알고리즘과 호버 인터랙션은 팀원이 주도했고, 본인은 React 통합과 D3 데이터 조인 기반 부분 갱신을 담당했습니다.
 
 ### Case 1. Feature-First 디렉토리 도입과 거대 훅 분해
 #### 1. 문제 원인
@@ -48,27 +48,29 @@ graph TD
 - 기능 추가 시 어떤 디렉토리에 어떤 파일이 들어가야 하는지에 대한 팀 내 합의가 잡혀 신규 기능 머지 충돌 빈도가 줄었습니다.
 - 디렉토리 재정의 작업을 통해 모듈 간 import 방향을 단방향으로 고정해야 신규 기능이 기존 도메인을 침범하지 않는다는 작업 기준을 팀과 공유했습니다.
 
-### Case 2. D3 그래프와 React 라이프사이클의 안전한 통합
+### Case 2. D3 데이터 조인으로 시각화 부분 갱신
 #### 1. 문제 원인
-- 팀원이 도입한 D3 Force Simulation은 SVG DOM을 직접 변형하기 때문에, React가 동일한 SVG를 다시 그리려고 할 때 잔여 노드나 이벤트 리스너가 남아 시각적 아티팩트가 발생했습니다.
-- 토픽이 바뀌거나 트리가 갱신될 때마다 이전 시뮬레이션 상태가 새 데이터에 남는 문제가 있었습니다.
+- 초기 visualizer는 토픽이 바뀌거나 트리가 갱신될 때마다 `d3.select(svgRef).selectAll("*").remove()`로 SVG 하위 트리를 통째로 비운 뒤 그래프를 처음부터 다시 그렸습니다.
+- 전체를 다시 그리는 방식이라 노드 하나만 추가되거나 삭제돼도 시뮬레이션이 새로 시작돼 기존 노드 좌표가 초기화됐고, defs 필터와 zoom, force simulation까지 매 갱신마다 재생성됐습니다.
 
 #### 2. 해결 과정
 ```mermaid
 flowchart LR
-    Data[ViewData 변경] -->|useEffect deps| Effect[Effect 실행]
-    Effect -->|selectAll remove| Clear[SVG 초기화]
-    Clear -->|hierarchy 재구성| Build[새 그래프 빌드]
-    Build -->|simulation tick| Render[렌더링]
-    Effect -->|cleanup| Unmount[안전 정리]
+    Mount[마운트 1회] -->|프레임 생성| Frame[svg defs zoom 레이어 simulation tick]
+    Data[nodes 변경] -->|data id 키 join| Join[enter update exit]
+    Join -->|변경분만 반영| Patch[부분 갱신]
+    Join -->|positionsRef| Keep[좌표 보존]
+    Patch -->|alpha 0.3 restart| Reheat[시뮬레이션 재가열]
 ```
-- visualizer 컴포넌트의 useEffect에서 `d3.select(svgRef).selectAll("*").remove()`로 매 갱신마다 SVG 하위 트리를 초기화한 뒤 hierarchy와 simulation을 다시 구성하는 패턴을 정리했습니다.
-- onNodeClick과 같이 자주 변하는 콜백은 ref로 감싸 effect 의존성에서 분리하고, currentPath 등 시각적 강조에 영향을 주는 값만 deps에 포함해 불필요한 재구성을 막았습니다.
-- 색상 알고리즘과 호버 desaturate 같은 시각적 인터랙션은 팀원이 작성한 코드를 유지하고, 본인은 통합 지점인 라이프사이클과 cleanup 흐름에 집중했습니다.
+- svg 프레임과 defs(필터), zoom, 레이어, forceSimulation, tick은 마운트 시 1회만 생성해 재사용하도록 분리하고, 매 갱신마다 재생성하던 코드를 걷어냈습니다.
+- 데이터가 바뀌면 `.data(nodes, d => d.data.id).join(...)`으로 노드 id를 키 삼아 enter, update, exit를 구분해 변경, 추가, 삭제된 노드만 DOM에 반영했습니다.
+- 기존 노드는 positionsRef에 좌표를 보존해 join 시 그대로 복원하고, simulation.nodes와 forceLink.links를 갱신한 뒤 alpha(0.3)으로 restart해 바뀐 부분만 재배치했습니다.
+- selectAll().remove()는 언마운트 cleanup에서만 1회 호출하도록 옮겨, StrictMode 이중 마운트에서도 키 조인이 안전하게 동작하도록 했습니다.
+- 색상 알고리즘과 호버 desaturate 같은 시각적 인터랙션은 팀원이 작성한 코드를 유지하고, 본인은 React 통합과 데이터 조인 재설계에 집중했습니다.
 
 #### 3. 결과
-- 토픽이 바뀌거나 트리가 갱신될 때 SVG가 정상적으로 재구성되어 잔여 노드나 중복 이벤트로 인한 시각적 결함이 사라졌습니다.
-- React와 D3를 같은 컴포넌트에서 다룰 때 cleanup과 의존성 분리 규칙을 useEffect 한 곳에 모아 두니, 토픽 갱신마다 잔여 DOM이 다음 시뮬레이션을 오염시키는 사고가 더 이상 재현되지 않았습니다.
+- 노드를 추가하거나 삭제해도 변경된 노드만 갱신되고 나머지 노드는 좌표를 유지해, 토픽 갱신 때마다 그래프가 처음부터 다시 그려지며 화면이 튀던 현상이 사라졌습니다.
+- 데이터 조인으로 갱신 책임을 키 기준으로 정리하니, 프레임과 시뮬레이션은 1회 마운트로 재사용하고 데이터 변경만 부분 반영하는 구조가 잡혀 StrictMode 이중 마운트에서도 잔여 DOM이 남지 않았습니다.
 
 ### Case 3. 새 토픽 생성 시 LLM 응답 대기 가리기
 #### 1. 문제 원인

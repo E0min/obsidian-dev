@@ -10,7 +10,7 @@
 
 - 사이드바 토픽 클릭 시 초기 로딩 지연을 줄이고자 Zustand 스토어에 LLM 응답을 프리패치하고 useSuspenseQuery의 initialData로 주입해 라우트 전환 시 빈 화면 없이 데이터를 즉시 그렸습니다.
 
-- 팀원이 도입한 D3.js Force Simulation이 리렌더 시 SVG 트리와 충돌하는 문제를 useEffect cleanup과 `d3.selectAll("*").remove()`로 해결해 데이터 변경 시 SVG 재구성을 보장했습니다.
+- 팀원이 도입한 D3 Force Simulation과 React 리렌더 충돌로 매 갱신마다 전체 SVG를 지우고 다시 그리던 방식을, 노드 id를 키로 한 enter/update/exit 데이터 조인으로 바꿔 변경된 노드만 부분 갱신하고 시뮬레이션을 재사용하도록 개선했습니다.
 
 - 확장에 대비해 Feature-First 구조로 features·views·shared를 분리하고, 843줄까지 비대해진 use-question-tree 훅을 책임 단위로 나눠 355줄로 축소했습니다.
 

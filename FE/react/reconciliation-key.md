@@ -1,17 +1,27 @@
 ---
 title: Reconciliation과 key
-aliases: [reconciliation, diffing, virtual dom, key, 재조정, 가상돔]
+aliases:
+  - reconciliation
+  - diffing
+  - virtual dom
+  - key
+  - 재조정
+  - 가상돔
 type: concept
 status: budding
 created: 2026-06-23
 updated: 2026-06-23
-tags: [fe/react, status/budding]
+tags:
+  - fe/react
+  - status/budding
 related:
   - "[[_MOC]]"
   - "[[리렌더링-트리거]]"
   - "[[lifecycle-useEffect]]"
-  - "[[../_roadmap/_MOC]]"
-source: ["react.dev: Preserving and Resetting State", "react.dev: Rendering Lists (keys)"]
+  - "[[FE/_Roadmap/_MOC]]"
+source:
+  - "react.dev: Preserving and Resetting State"
+  - "react.dev: Rendering Lists (keys)"
 ---
 
 # Reconciliation과 key
@@ -165,7 +175,7 @@ function List() {
 - [[_MOC]]
 - [[리렌더링-트리거]]
 - [[lifecycle-useEffect]]
-- [[../_roadmap/_MOC]]
+- [[FE/_Roadmap/_MOC]]
 
 ## Sources
 - react.dev: Preserving and Resetting State

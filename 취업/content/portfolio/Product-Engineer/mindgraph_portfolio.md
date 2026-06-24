@@ -1,6 +1,6 @@
 ## [MindGraph] - AI 지식 캡처 & 그래프 시각화
 
-ChatGPT·Gemini·Claude·Grok 4개 LLM 서비스의 답변을 캡처해 의미 단위로 묶고 D3.js로 시각화하는 Chrome Extension·Next.js 웹앱입니다. "여러 LLM 서비스에 흩어진 답변을 한 곳에 모으면 사용자의 사고 흐름이 보존된다"는 가설을 코드보다 문제 정의에서 먼저 잡았습니다. 1인 PO로 Chrome Extension·Next.js 웹앱·Supabase 백엔드를 풀스택으로 책임지며 도메인 getmindgraph.com 출시를 목표로 프로토타입을 빌드하고 있습니다. 가설을 빠르게 검증하려고 Claude Code 위에 9개 훅·plan·build·qa·ship 4 phase /sprint 워크플로우·4중 SSOT 자동 동기를 직접 설계했습니다 (Case 1에서 상세히 설명합니다).
+ChatGPT·Gemini·Claude·Grok 4개 LLM 서비스의 답변을 캡처해 의미 단위로 묶고 Cytoscape.js로 시각화하는 Chrome Extension·Next.js 웹앱입니다. "여러 LLM 서비스에 흩어진 답변을 한 곳에 모으면 사용자의 사고 흐름이 보존된다"는 가설을 코드보다 문제 정의에서 먼저 잡았습니다. 1인 PO로 Chrome Extension·Next.js 웹앱·Supabase 백엔드를 풀스택으로 책임지며 도메인 getmindgraph.com 출시를 목표로 프로토타입을 빌드하고 있습니다. 가설을 빠르게 검증하려고 Claude Code 위에 9개 훅·plan·build·qa·ship 4 phase /sprint 워크플로우·4중 SSOT 자동 동기를 직접 설계했습니다 (Case 1에서 상세히 설명합니다).
 
 ### 전체적인 아키텍처
 
@@ -18,7 +18,7 @@ graph TD
         CANVAS["Canvas Page\ncanvas/[topicId]"]
         STORE["useStorage()"]
         IDX2["IndexedDB\nmindgraph-cloud-cache"]
-        D3E["D3 Engine\nforce-bubble"]
+        CYE["Cytoscape.js\nfcose/dagre 그래프"]
         SYNC["SyncEngine\nPending Ops Queue"]
     end
 
@@ -31,7 +31,7 @@ graph TD
     CS --> BG --> IDX1 --> APP
     APP --> STORE --> IDX2
     STORE --> SYNC --> PG
-    APP --> CANVAS --> D3E
+    APP --> CANVAS --> CYE
     PG --> AUTH
 ```
 
