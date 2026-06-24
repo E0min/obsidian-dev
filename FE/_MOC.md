@@ -25,7 +25,6 @@ tags: [moc, fe]
 - 
 
 ## Currently learning (budding)
-- [[FE/_Roadmap/_MOC]] — **12주 기본기 재정비 로드맵** (계획·습관·학습 인덱스·프로젝트 소유권)
 - [[react/_MOC]] — 딥다이브 시작 (32개, 1-2주 분량)
 - [[performance/core-web-vitals/웹-성능-측정]] — LCP·CLS·INP 측정·개선
 - [[css-styling/html-css-기초]] — 박스 모델·시맨틱·접근성
@@ -94,6 +93,7 @@ SORT length(rows) DESC
 ---
 
 ## See also
+- [[../study/_MOC]] — 학습·커리어 허브 (기초 12주·꾸준히 할 것·MindGraph 기록)
 - [[CS/compiler-runtime/_MOC]] — V8, JIT
 - [[AI-Native/claude-code/_MOC]] — FE 개발 워크플로
 - [[Projects/mindgraph/_INDEX]] — D3 활용 사례

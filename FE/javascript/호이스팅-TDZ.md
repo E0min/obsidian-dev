@@ -16,7 +16,7 @@ related:
   - "[[_MOC]]"
   - "[[const-let-var]]"
   - "[[실행-컨텍스트-메모리]]"
-  - "[[FE/_Roadmap/_MOC]]"
+  - "[[study/_MOC]]"
 source:
   - "MDN: Hoisting"
   - "MDN: let (Temporal dead zone)"
@@ -127,7 +127,7 @@ for (let j = 0; j < 3; j++) {
 - [[_MOC]]
 - [[const-let-var]]
 - [[실행-컨텍스트-메모리]]
-- [[FE/_Roadmap/_MOC]]
+- [[study/_MOC]]
 
 ## Sources
 

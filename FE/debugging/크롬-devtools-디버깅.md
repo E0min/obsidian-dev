@@ -18,7 +18,7 @@ related:
   - "[[../_MOC]]"
   - "[[../browser/렌더링-파이프라인]]"
   - "[[../performance/core-web-vitals/웹-성능-측정]]"
-  - "[[FE/_Roadmap/_MOC]]"
+  - "[[study/_MOC]]"
 source:
   - Chrome DevTools docs
   - "MDN: Firefox/Chrome debugger"
@@ -109,7 +109,7 @@ OAuth 콜백 오류는 Network 탭에서 콜백 요청을 찾아 Headers의 요�
 - [[../_MOC]]
 - [[../browser/렌더링-파이프라인]]
 - [[../performance/core-web-vitals/웹-성능-측정]]
-- [[FE/_Roadmap/_MOC]]
+- [[study/_MOC]]
 
 ## Sources
 

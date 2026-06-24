@@ -18,7 +18,7 @@ related:
   - "[[_MOC]]"
   - "[[리렌더링-트리거]]"
   - "[[lifecycle-useEffect]]"
-  - "[[FE/_Roadmap/_MOC]]"
+  - "[[study/_MOC]]"
 source:
   - "react.dev: Preserving and Resetting State"
   - "react.dev: Rendering Lists (keys)"
@@ -175,7 +175,7 @@ function List() {
 - [[_MOC]]
 - [[리렌더링-트리거]]
 - [[lifecycle-useEffect]]
-- [[FE/_Roadmap/_MOC]]
+- [[study/_MOC]]
 
 ## Sources
 - react.dev: Preserving and Resetting State
