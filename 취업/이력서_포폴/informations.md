@@ -20,6 +20,6 @@ tags: [career, reference]
 
 ## See also
 - [[_INDEX]]
-- [[취업/links-to-code]]
+- [[취업/이력서_포폴/links-to-code]]
 
 [[]]

@@ -15,7 +15,7 @@ tags: [project/취업]
 |------|------|---------|
 | `~/깃허브/취업/이력서_포폴/pdf-generator/` | Next.js 코드 (puppeteer + content 로더) | [[../pdf-generator/_INDEX]] |
 | `~/깃허브/취업/이력서_포폴/pdf-generator/CLAUDE.md` | **작성 규칙 SSOT** | [[../../CLAUDE]] §11 |
-| `~/깃허브/취업/이력서_포폴/pdf-generator/content` | **symlink** → `~/obsidian/Dev/Projects/취업/content/` | [[취업/content/_MOC]] |
+| `~/깃허브/취업/이력서_포폴/pdf-generator/content` | **symlink** → `~/obsidian/Dev/Projects/취업/이력서_포폴/content/` | [[취업/이력서_포폴/content/_MOC]] |
 | `~/깃허브/취업/이력서_포폴/pdf-generator/scripts/generate-pdf.ts` | PDF 생성 + 출력 경로 결정 | [[../pdf-generator/links-to-code]] |
 | `~/깃허브/취업/이력서_포폴/pdf-generator/src/lib/content.ts` | content 로더 (env var fallback) | — |
 

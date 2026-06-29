@@ -1,6 +1,6 @@
 ---
 type: moc
-title: 취업/interviews — Map of Contents
+title: 취업/이력서_포폴/interviews — Map of Contents
 status: budding
 updated: 2026-05-23
 tags: [moc, career, interview-prep]
@@ -19,7 +19,7 @@ tags: [moc, career, interview-prep]
 - 면접 후 기록은 `interviews/sessions/YYYY-MM-DD-<회사>.md`로 추가
 
 ## 관련 자산
-- [[취업/guides/_MOC]] — 작성 가이드
+- [[취업/이력서_포폴/guides/_MOC]] — 작성 가이드
 - [[../portfolio-strategy]] — 직무별 어필 매핑
 - [[취업/_INDEX]] — 4직무별 프로젝트 매핑
 

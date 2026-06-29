@@ -22,7 +22,7 @@ tags: [project/pdf-generator, status/active, career/product-engineer, career/ai-
 
 ## Content 구조 (SSOT는 옵시디언, 코드는 symlink)
 ```
-~/obsidian/Dev/Projects/취업/content/                     ← SSOT (옵시디언)
+~/obsidian/Dev/Projects/취업/이력서_포폴/content/                     ← SSOT (옵시디언)
 ├── _about.md                                              # 공통 프로필 헤더
 ├── me.jpg                                                 # 프로필 이미지
 ├── pdf.config.json                                        # 직무별 files 순서
@@ -37,7 +37,7 @@ tags: [project/pdf-generator, status/active, career/product-engineer, career/ai-
 └── refs/mindgraph                                         # 옵시디언 참조 심링크
 
 # PDF 출력은 별도 위치:
-~/obsidian/Dev/Projects/취업/outputs/{role}/{N}/{이력서|포트폴리오}.pdf  ← 직무 자산
+~/obsidian/Dev/Projects/취업/이력서_포폴/outputs/{role}/{N}/{이력서|포트폴리오}.pdf  ← 직무 자산
 ```
 
 ## Map
@@ -62,5 +62,5 @@ tags: [project/pdf-generator, status/active, career/product-engineer, career/ai-
 
 ## See also
 - [[취업/_INDEX]] — 직무 준비 메타 프로젝트
-- [[취업/guides/_MOC]] — 이력서/포폴 가이드
-- [[취업/interviews/_MOC]] — 면접 준비
+- [[취업/이력서_포폴/guides/_MOC]] — 이력서/포폴 가이드
+- [[취업/이력서_포폴/interviews/_MOC]] — 면접 준비

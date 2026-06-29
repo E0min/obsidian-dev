@@ -77,6 +77,6 @@ SORT file.folder ASC
 
 - [[../FE/_MOC]] — FE 전체 Map of Contents
 - [[../취업/_INDEX]] — 이력서·포폴·JD 분석
-- [[../취업/interviews/_MOC]] — 프로젝트별 면접 자료
+- [[../취업/이력서_포폴/interviews/_MOC]] — 프로젝트별 면접 자료
 - [[../CS/_MOC]] — CS 전공지식
 - [[../AI-Native/_MOC]] — AI-native 기술

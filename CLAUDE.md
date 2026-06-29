@@ -184,28 +184,28 @@ study-count:     # 정수 (학습 누적 횟수)
 
 | 자산 | SSOT 위치 | 코드 접근 방식 |
 |------|-----------|---------------|
-| 이력서·포폴 MD | `~/obsidian/Dev/Projects/취업/content/` | symlink + `PDF_CONTENT_DIR` env var |
-| 생성된 PDF | `~/obsidian/Dev/Projects/취업/outputs/` | `DEFAULT_OUTPUT_DIR` + `PDF_OUTPUT_DIR` env var |
+| 이력서·포폴 MD | `~/obsidian/Dev/Projects/취업/이력서_포폴/content/` | symlink + `PDF_CONTENT_DIR` env var |
+| 생성된 PDF | `~/obsidian/Dev/Projects/취업/이력서_포폴/outputs/` | `DEFAULT_OUTPUT_DIR` + `PDF_OUTPUT_DIR` env var |
 | 작성 규칙 | `~/깃허브/취업/이력서_포폴/pdf-generator/CLAUDE.md` | 코드 디렉토리 (sync to 옵시디언 §11) |
-| 가이드 | `~/obsidian/Dev/Projects/취업/guides/` | (옵시디언 working copy) |
-| 면접 자료 | `~/obsidian/Dev/Projects/취업/interviews/projects/` | (옵시디언 working copy) |
+| 가이드 | `~/obsidian/Dev/Projects/취업/이력서_포폴/guides/` | (옵시디언 working copy) |
+| 면접 자료 | `~/obsidian/Dev/Projects/취업/이력서_포폴/interviews/projects/` | (옵시디언 working copy) |
 
 ### Sync 의무 (양방향)
 
 | 변경 위치 | sync 대상 | 트리거 |
 |-----------|-----------|--------|
-| `pdf-generator/claude.md` (작성 규칙 변경) | 옵시디언 `Projects/취업/guides/_MOC.md`에 변경 사항 노트 | 규칙 의사결정 시 |
+| `pdf-generator/claude.md` (작성 규칙 변경) | 옵시디언 `Projects/취업/이력서_포폴/guides/_MOC.md`에 변경 사항 노트 | 규칙 의사결정 시 |
 | `pdf-generator/content/resume|portfolio/{role}/` (이력서·포폴 컨텐츠 변경) | 옵시디언 cross-link 갱신 X (포인터만 유지) | — |
-| 옵시디언 `Projects/취업/guides/이력서가이드.md` 또는 `포폴가이드.md` 변경 | `~/깃허브/취업/이력서_포폴/이력서가이드.md` 또는 `포폴가이드.md`로 sync | 가이드 발견 즉시 |
-| 옵시디언 `Projects/취업/interviews/projects/*.md` 면접 자료 갱신 | (옵시디언이 working copy, sync 불필요) | — |
-| **PDF 출력 위치** (`scripts/generate-pdf.ts` `DEFAULT_OUTPUT_DIR` 변경) | `Dev/Projects/취업/outputs/_MOC.md` + `Dev/Projects/pdf-generator/{architecture,links-to-code}.md` 경로 갱신 | DEFAULT_OUTPUT_DIR 상수 변경 시 |
+| 옵시디언 `Projects/취업/이력서_포폴/guides/이력서가이드.md` 또는 `포폴가이드.md` 변경 | `~/깃허브/취업/이력서_포폴/이력서가이드.md` 또는 `포폴가이드.md`로 sync | 가이드 발견 즉시 |
+| 옵시디언 `Projects/취업/이력서_포폴/interviews/projects/*.md` 면접 자료 갱신 | (옵시디언이 working copy, sync 불필요) | — |
+| **PDF 출력 위치** (`scripts/generate-pdf.ts` `DEFAULT_OUTPUT_DIR` 변경) | `Dev/Projects/취업/이력서_포폴/outputs/_MOC.md` + `Dev/Projects/pdf-generator/{architecture,links-to-code}.md` 경로 갱신 | DEFAULT_OUTPUT_DIR 상수 변경 시 |
 
 ### PDF 출력 위치 (2026-05-23부터)
 
-- **기본 출력**: `~/obsidian/Dev/Projects/취업/outputs/{role}/{N}/{이력서|포트폴리오}.pdf`
+- **기본 출력**: `~/obsidian/Dev/Projects/취업/이력서_포폴/outputs/{role}/{N}/{이력서|포트폴리오}.pdf`
 - pdf-generator 깃허브 레포에는 PDF 저장되지 않음 (`output/` 디렉토리 비어있음, `.gitignore` 처리됨)
 - override 우선순위: `--output=<path>` CLI > `PDF_OUTPUT_DIR` env > 옵시디언 vault default
-- 관련 노트: [[취업/outputs/_MOC]]
+- 관련 노트: [[취업/이력서_포폴/outputs/_MOC]]
 
 ### 직무 매핑 일관성
 
@@ -219,7 +219,7 @@ study-count:     # 정수 (학습 누적 횟수)
 
 ### 금지
 
-- ❌ pdf-generator/content/ symlink 끊기 (코드 정적 import 깨짐) — 깨지면 `ln -s ~/obsidian/Dev/Projects/취업/content ~/깃허브/취업/이력서_포폴/pdf-generator/content`로 복구
+- ❌ pdf-generator/content/ symlink 끊기 (코드 정적 import 깨짐) — 깨지면 `ln -s ~/obsidian/Dev/Projects/취업/이력서_포폴/content ~/깃허브/취업/이력서_포폴/pdf-generator/content`로 복구
 - ❌ 옵시디언 vault 이동 시 symlink 재생성 잊기 — 또는 `PDF_CONTENT_DIR` env var로 우회
 - ❌ 증명서류 PDF를 옵시디언으로 복사 (개인정보)
 - ❌ `pdf-generator/CLAUDE.md` 변경하면서 옵시디언 가이드 안 갱신 (정합성 깨짐)

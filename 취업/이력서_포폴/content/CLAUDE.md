@@ -10,10 +10,10 @@
 
 | 자료 | 위치 | 용도 |
 |------|------|------|
-| 직무별 자격·우대 모음 (zighang 30건 표본) | `~/obsidian/Dev/취업/jd-analysis/requirements/{role}.md` | 직무 빈출 자격요건·우대사항 인용 근거 |
-| 직무별 빈도 분석 | `~/obsidian/Dev/취업/jd-analysis/0{1-4}-{role}.md` | 키워드 빈도(Top 5)·회사 분포·경력 분포 |
-| 사용자 자산 매칭 매트릭스 | `~/obsidian/Dev/취업/jd-analysis/matrix.md` | 4 프로젝트 × 4 직무 적합도·Gap·코드 매칭 근거 |
-| 직무별 업그레이드 가이드 | `~/obsidian/Dev/취업/jd-analysis/upgrade-guide/{role}.md` | 직무 자격 강화용 mindgraph 업그레이드 후보 (현재 미구현 항목, 본문에 쓰지 말 것) |
+| 직무별 자격·우대 모음 (zighang 30건 표본) | `~/obsidian/Dev/취업/이력서_포폴/jd-analysis/requirements/{role}.md` | 직무 빈출 자격요건·우대사항 인용 근거 |
+| 직무별 빈도 분석 | `~/obsidian/Dev/취업/이력서_포폴/jd-analysis/0{1-4}-{role}.md` | 키워드 빈도(Top 5)·회사 분포·경력 분포 |
+| 사용자 자산 매칭 매트릭스 | `~/obsidian/Dev/취업/이력서_포폴/jd-analysis/matrix.md` | 4 프로젝트 × 4 직무 적합도·Gap·코드 매칭 근거 |
+| 직무별 업그레이드 가이드 | `~/obsidian/Dev/취업/이력서_포폴/jd-analysis/upgrade-guide/{role}.md` | 직무 자격 강화용 mindgraph 업그레이드 후보 (현재 미구현 항목, 본문에 쓰지 말 것) |
 
 작성 원칙:
 
@@ -124,7 +124,7 @@
 
 **본문에 쓰지 않는 것**:
 
-- 임베딩 추천(auto-link)·H1/H3 정량 측정(telemetry)·풀텍스트+임베딩 통합 검색 — mindgraph 코드 미구현 (2026-06-03 확인). 향후 업그레이드 후보는 `~/obsidian/Dev/취업/jd-analysis/upgrade-guide/AI-Native-Builder.md` Gap·§3에 둠.
+- 임베딩 추천(auto-link)·H1/H3 정량 측정(telemetry)·풀텍스트+임베딩 통합 검색 — mindgraph 코드 미구현 (2026-06-03 확인). 향후 업그레이드 후보는 `~/obsidian/Dev/취업/이력서_포폴/jd-analysis/upgrade-guide/AI-Native-Builder.md` Gap·§3에 둠.
 - "PyTorch·TensorFlow 모델 학습" — 사용자 코드 없음
 - "Custom Backbone·LLM 파인튜닝" — 사용자 코드 없음
 - "Vector DB(Faiss·Milvus·Weaviate)" — pgvector만 사용

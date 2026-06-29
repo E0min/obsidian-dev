@@ -1,6 +1,6 @@
 ---
 type: moc
-title: 취업/guides — Map of Contents
+title: 취업/이력서_포폴/guides — Map of Contents
 status: evergreen
 updated: 2026-05-23
 tags: [moc, career, guide]

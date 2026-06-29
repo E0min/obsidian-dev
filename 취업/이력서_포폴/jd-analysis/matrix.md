@@ -6,7 +6,7 @@ sample_total: 18
 
 # 직무 × 키워드 × 사용자 프로젝트 매트릭스
 
-이 매트릭스의 모든 평가는 `companies/` 18건 공고 원문과 `~/obsidian/Dev/Projects/취업/content/resume/**` 본문, `pdf-generator/refs/mindgraph/` 실코드 기반 검증. 추정·일반화 없음.
+이 매트릭스의 모든 평가는 `companies/` 18건 공고 원문과 `~/obsidian/Dev/Projects/취업/이력서_포폴/content/resume/**` 본문, `pdf-generator/refs/mindgraph/` 실코드 기반 검증. 추정·일반화 없음.
 
 ## 1. 직무별 빈도 상위 키워드 (표본 18건 통합)
 

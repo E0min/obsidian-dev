@@ -27,7 +27,7 @@ tags: [now]
 ## 직무 준비 진행
 - 타겟 회사: [[Projects/취업/target-companies]]
 - 포폴 우선순위: [[Projects/취업/portfolio-strategy]]
-- 다음 면접 준비: [[Projects/취업/interviews]]
+- 다음 면접 준비: [[Projects/취업/이력서_포폴/interviews]]
 
 ---
 

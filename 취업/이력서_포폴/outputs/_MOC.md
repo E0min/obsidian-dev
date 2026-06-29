@@ -1,6 +1,6 @@
 ---
 type: moc
-title: 취업/outputs — 생성된 PDF 인덱스
+title: 취업/이력서_포폴/outputs — 생성된 PDF 인덱스
 status: budding
 updated: 2026-06-06
 tags: [moc, career, pdf-output]
@@ -47,7 +47,7 @@ npm run pdf -- --role=FDE
 npm run pdf -- --role=FDE --version=3
 ```
 
-기본 출력은 이 폴더(`~/obsidian/Dev/취업/outputs/`)로 저장됨.
+기본 출력은 이 폴더(`~/obsidian/Dev/취업/이력서_포폴/outputs/`)로 저장됨.
 
 ## 출력 경로 override
 
@@ -75,7 +75,7 @@ npm run pdf -- --role=FDE --version=3
 ## 관련 SSOT
 
 - 작성 규칙: `~/깃허브/취업/이력서_포폴/이력서_포폴_v2/pdf-generator/CLAUDE.md` + `docs/`
-- 컨텐츠 SSOT: [[취업/content/_MOC]]
+- 컨텐츠 SSOT: [[취업/이력서_포폴/content/_MOC]]
 - 옵시디언 schema: [[../../../CLAUDE]] §11
 
 ## 보안
@@ -85,4 +85,4 @@ npm run pdf -- --role=FDE --version=3
 
 ## See also
 - [[취업/_INDEX]]
-- [[취업/content/_MOC]]
+- [[취업/이력서_포폴/content/_MOC]]

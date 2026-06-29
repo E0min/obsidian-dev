@@ -36,5 +36,5 @@ tags: [moc, career, cover-letter]
 ## See also
 
 - [[취업/_INDEX]] — 직무 준비 메타 프로젝트
-- [[취업/guides/_MOC]] — 이력서·포폴·프롬프트 가이드
-- [[취업/interviews/_MOC]] — 면접 준비 자료
+- [[취업/이력서_포폴/guides/_MOC]] — 이력서·포폴·프롬프트 가이드
+- [[취업/이력서_포폴/interviews/_MOC]] — 면접 준비 자료

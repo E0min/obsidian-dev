@@ -1,6 +1,6 @@
 ---
 type: moc
-title: 취업/content — SSOT 이력서·포폴 컨텐츠
+title: 취업/이력서_포폴/content — SSOT 이력서·포폴 컨텐츠
 status: evergreen
 updated: 2026-06-06
 tags: [moc, career, content-ssot]
@@ -8,7 +8,7 @@ tags: [moc, career, content-ssot]
 
 # Content — 이력서·포폴 마크다운 SSOT
 
-> 2026-05-23부터 **옵시디언이 SSOT**. 실제 경로는 `~/obsidian/Dev/취업/content/`.
+> 2026-05-23부터 **옵시디언이 SSOT**. 실제 경로는 `~/obsidian/Dev/취업/이력서_포폴/content/`.
 > `~/깃허브/취업/이력서_포폴/이력서_포폴_v2/pdf-generator/content`가 symlink로 이 폴더를 가리킴.
 > 여기서 편집하면 다음 `npm run dev` / `npm run pdf`에 즉시 반영.
 
@@ -46,13 +46,13 @@ content/
 
 1. **옵시디언에서 직접 편집** (이 vault 폴더 안)
 2. `pdf-generator` dev 서버 재시작 또는 `npm run pdf` 실행
-3. 생성된 PDF → [[취업/outputs/_MOC]]
+3. 생성된 PDF → [[취업/이력서_포폴/outputs/_MOC]]
 
 ## SSOT 변경 (2026-05-23)
 
 | 이전 | 이후 |
 |------|------|
-| `pdf-generator/content/` (코드 디렉토리) | `~/obsidian/Dev/취업/content/` (옵시디언 vault) |
+| `pdf-generator/content/` (코드 디렉토리) | `~/obsidian/Dev/취업/이력서_포폴/content/` (옵시디언 vault) |
 | 코드와 함께 관리 | 옵시디언이 working copy |
 | 한 곳만 편집 (코드 디렉토리) | 한 곳만 편집 (옵시디언) |
 
@@ -96,10 +96,10 @@ content/
 
 - **출시 전 1인 프로토타입** (도메인 getmindgraph.com 등록 후 출시 전, 실서비스 운영 아님)
 - AI 운영 자산: **9개 훅**(차단 4 + 보조 5, commit-user-gate 폐기) · **plan·qa·ship 3 phase** /sprint · 4중 SSOT · 7부서·9에이전트 분리 + context-map 자동 라우팅
-- 본문에서 제거한 미구현(또는 미완성 판단) 기능: 임베딩 추천(auto-link)·H1/H3 정량 측정(telemetry)·Force 시뮬레이션 정착 tick 단축 → 향후 업그레이드 후보는 [[취업/jd-analysis/upgrade-guide/AI-Native-Builder]] Gap에만 둠
+- 본문에서 제거한 미구현(또는 미완성 판단) 기능: 임베딩 추천(auto-link)·H1/H3 정량 측정(telemetry)·Force 시뮬레이션 정착 tick 단축 → 향후 업그레이드 후보는 [[취업/이력서_포폴/jd-analysis/upgrade-guide/AI-Native-Builder]] Gap에만 둠
 
 ## See also
 - [[취업/_INDEX]] — 직무 어필 매핑
-- [[취업/guides/_MOC]] — 작성 가이드
-- [[취업/outputs/_MOC]] — 생성된 PDF
+- [[취업/이력서_포폴/guides/_MOC]] — 작성 가이드
+- [[취업/이력서_포폴/outputs/_MOC]] — 생성된 PDF
 - [[../../../CLAUDE]] §11 — sync 규칙

@@ -265,12 +265,12 @@ seedling → budding → evergreen
 ### pdf-generator hybrid (특수)
 
 ```
-~/obsidian/Dev/Projects/취업/content/   ← SSOT (옵시디언)
+~/obsidian/Dev/Projects/취업/이력서_포폴/content/   ← SSOT (옵시디언)
                   ↑ symlink
 ~/깃허브/취업/이력서_포폴/pdf-generator/content/
                   ↑ 코드가 정적 import + fs.readFile
 
-~/obsidian/Dev/Projects/취업/outputs/    ← 기본 출력 (옵시디언)
+~/obsidian/Dev/Projects/취업/이력서_포폴/outputs/    ← 기본 출력 (옵시디언)
                   ↑ DEFAULT_OUTPUT_DIR in scripts/generate-pdf.ts
 ~/깃허브/취업/이력서_포폴/pdf-generator/scripts/generate-pdf.ts
 ```
@@ -292,9 +292,9 @@ vault는 4직무 동시 준비를 지원합니다.
 
 직무별 자산 진입:
 - [[취업/_INDEX]] — 4직무 어필 매핑 + 프로젝트 매트릭스
-- [[취업/content/_MOC]] — 이력서·포폴 SSOT
-- [[취업/outputs/_MOC]] — 생성된 PDF
-- [[취업/interviews/_MOC]] — 면접 준비 자료
+- [[취업/이력서_포폴/content/_MOC]] — 이력서·포폴 SSOT
+- [[취업/이력서_포폴/outputs/_MOC]] — 생성된 PDF
+- [[취업/이력서_포폴/interviews/_MOC]] — 면접 준비 자료
 
 ---
 
@@ -341,14 +341,14 @@ vault는 4직무 동시 준비를 지원합니다.
 
 [[CLAUDE]] §9 + §11 금지 사항 참조. 가장 큰 함정:
 
-1. **이력서/포폴 MD를 두 곳에 복제 X** — `~/obsidian/Dev/Projects/취업/content/`가 SSOT, 코드는 symlink로 참조
-2. **`pdf-generator/content/` symlink 끊지 말 것** — 끊기면 `ln -s ~/obsidian/Dev/Projects/취업/content ~/깃허브/취업/이력서_포폴/pdf-generator/content`로 복구
+1. **이력서/포폴 MD를 두 곳에 복제 X** — `~/obsidian/Dev/Projects/취업/이력서_포폴/content/`가 SSOT, 코드는 symlink로 참조
+2. **`pdf-generator/content/` symlink 끊지 말 것** — 끊기면 `ln -s ~/obsidian/Dev/Projects/취업/이력서_포폴/content ~/깃허브/취업/이력서_포폴/pdf-generator/content`로 복구
 3. **`_sources/` 파일 수정 X** — Layer 1은 immutable
 4. **`~/깃허브/` 코드를 옵시디언으로 복사 X** — `links-to-code.md`로 포인터만
 5. **frontmatter 누락 X** — 검색·필터링 무력화
 6. **의미 없는 stub 양산 X** — 최소 TL;DR이라도 채울 것
 7. **증명서류 PDF를 옵시디언으로 복사 X** — 개인정보 (cloud sync 노출 위험)
-8. **pdf-generator/CLAUDE.md 변경 시 옵시디언 가이드 sync** — `Projects/취업/guides/_MOC.md`에 변경 사항 노트
+8. **pdf-generator/CLAUDE.md 변경 시 옵시디언 가이드 sync** — `Projects/취업/이력서_포폴/guides/_MOC.md`에 변경 사항 노트
 
 ---
 
@@ -370,7 +370,7 @@ vault는 4직무 동시 준비를 지원합니다.
 
 - **Evidence Card 패턴** (보류) — 이력서·포폴 사실의 코드 증거 박제 시스템. dynamic verification (mindgraph, chatGraph) + static-only (Fit, xab) 두 트랙. 도입 시 `Projects/_conventions/evidence-card.md` 부터.
 - **Skills 메타 인덱스** — `AI-Native/skills/_index-by-category.md` 184개 스킬 자동 인덱싱 (예정)
-- **취업/jd-analysis/** — 타겟 회사 3~5개 JD 분석 (예정)
+- **취업/이력서_포폴/jd-analysis/** — 타겟 회사 3~5개 JD 분석 (예정)
 - **CodingTest 패턴 확장** — 현재 5패턴 (two-pointer, sliding-window, dfs-bfs, dp, monotonic-stack), 추가 5+ 예정
 
 ---

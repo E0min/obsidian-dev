@@ -19,7 +19,7 @@ tags: [project/<name>, status/active]
 ## Map
 - [[architecture]]
 - [[roadmap]]
-- [[취업/links-to-code]]
+- [[취업/이력서_포폴/links-to-code]]
 
 ## 최근 ADR
 - 

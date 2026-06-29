@@ -68,7 +68,7 @@ KR 우대 사항은 공고마다 빈약(와이큐는 "확인 못함"). GLOBAL은
 
 ## 5. 사용자 4개 프로젝트와 매칭
 
-근거 자료: `~/obsidian/Dev/Projects/취업/content/resume/FDE/*.md`, `pdf-generator/refs/mindgraph/`
+근거 자료: `~/obsidian/Dev/Projects/취업/이력서_포폴/content/resume/FDE/*.md`, `pdf-generator/refs/mindgraph/`
 
 | 프로젝트 | FDE 키워드 매칭 | 검증된 근거 |
 |----------|-----------------|------------|

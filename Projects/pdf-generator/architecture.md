@@ -13,7 +13,7 @@ tags: [project/pdf-generator, architecture]
 ## 데이터 흐름
 
 ```
-~/obsidian/Dev/Projects/취업/content/{resume|portfolio}/{FDE|Product-Engineer|AI-Native-Builder|FE}/*.md   ← SSOT (옵시디언)
+~/obsidian/Dev/Projects/취업/이력서_포폴/content/{resume|portfolio}/{FDE|Product-Engineer|AI-Native-Builder|FE}/*.md   ← SSOT (옵시디언)
               │
               │  (symlink: pdf-generator/content → 옵시디언 vault)
               │
@@ -23,7 +23,7 @@ tags: [project/pdf-generator, architecture]
               │
               ▼ (puppeteer in scripts/generate-pdf.ts)
               │
-~/obsidian/Dev/Projects/취업/outputs/{role}/{N}/{이력서|포트폴리오}.pdf   ← 옵시디언 vault
+~/obsidian/Dev/Projects/취업/이력서_포폴/outputs/{role}/{N}/{이력서|포트폴리오}.pdf   ← 옵시디언 vault
 ```
 
 **Content 경로 우선순위** (in `src/lib/content.ts`):
@@ -33,7 +33,7 @@ tags: [project/pdf-generator, architecture]
 **Output 경로 우선순위** (in `scripts/generate-pdf.ts`):
 1. `--output=<path>` CLI 옵션
 2. `PDF_OUTPUT_DIR=<path>` 환경변수
-3. 기본값: `~/obsidian/Dev/Projects/취업/outputs/` (옵시디언 vault)
+3. 기본값: `~/obsidian/Dev/Projects/취업/이력서_포폴/outputs/` (옵시디언 vault)
 
 ## 핵심 모듈
 
